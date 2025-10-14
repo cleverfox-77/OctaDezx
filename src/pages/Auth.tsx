@@ -93,6 +93,27 @@ const AuthPage = () => {
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!signInEmail) {
+      showDialog("Error", "Please enter your email address to reset your password.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(signInEmail, {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      });
+      if (error) {
+        throw error;
+      }
+      showDialog("Success!", "Check your email for the password reset link.");
+    } catch (error: any) {
+      showDialog("Error", error.message || "Failed to send password reset email");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 sm:p-6">
       <Card className="w-full max-w-md mx-auto">
@@ -133,6 +154,11 @@ const AuthPage = () => {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
+                <div className="text-center text-sm">
+                  <Button variant="link" onClick={handlePasswordReset} disabled={loading}>
+                    Forgot Password?
+                  </Button>
+                </div>
               </form>
             </TabsContent>
             <TabsContent value="signup">

@@ -12,9 +12,22 @@ const Index = () => {
             <Bot className="h-8 w-8 text-primary" />
             <span className="text-xl sm:text-2xl font-bold">OctaDezx AI</span>
           </div>
-          <Link to="/auth">
-            <Button size="sm" className="sm:size-auto">Get Started</Button>
-          </Link>
+          <nav className="hidden md:flex items-center space-x-4">
+            <Link to="/pricing">
+              <Button variant="ghost">Pricing</Button>
+            </Link>
+            <Link to="/auth">
+              <Button>Get Started</Button>
+            </Link>
+          </nav>
+          <div className="md:hidden flex items-center space-x-2">
+            <Link to="/pricing">
+              <Button variant="ghost" size="sm">Pricing</Button>
+            </Link>
+            <Link to="/auth">
+              <Button size="sm">Get Started</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -27,9 +40,9 @@ const Index = () => {
             Train an AI assistant to handle customer inquiries, show product images, 
             and escalate complex issues to your team automatically.
           </p>
-          <Link to="/auth">
+          <Link to="/pricing">
             <Button size="lg" className="text-base sm:text-lg px-6 py-4 sm:px-8 sm:py-6">
-              Start Your Free Trial
+              See Pricing
             </Button>
           </Link>
         </div>
