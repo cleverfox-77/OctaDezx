@@ -15,7 +15,6 @@ import Analytics from "./Analytics";
 import UserProfile from "@/components/UserProfile";
 import BusinessSettings from "@/components/BusinessSettings";
 import { type Database } from "@/integrations/supabase/types";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 type Business = Database["public"]["Tables"]["businesses"]["Row"];
 
@@ -155,7 +154,6 @@ const Dashboard = () => {
             <h1 className="text-xl sm:text-2xl font-bold">OctaDezx AI Dashboard</h1>
           </div>
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <ThemeToggle />
             <span className="text-sm text-muted-foreground hidden sm:inline">{user?.email}</span>
             <Button variant="outline" size="sm" onClick={handleSignOut}>
               <LogOut className="h-4 w-4 sm:mr-2" />
