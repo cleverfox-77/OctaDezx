@@ -1,16 +1,21 @@
-// Single-file proxy. vercel.json rewrites /api/supabase/* here, passing the
-// Supabase path as the `__path` query param and preserving all other params.
+// Single-file proxy. vercel.json rewrites /api/supabase/:path* here.
+// Vercel injects the matched segments as req.query.path; all other params
+// are the caller's original Supabase query (select, filters, limit, ...).
 const SUPABASE_URL = 'https://dnjhvfmlmvhabrlpcmao.supabase.co';
+
+// Routing/internal keys that must NOT be forwarded to Supabase as filters
+const INTERNAL_KEYS = new Set(['path', '__path', '__debug']);
 
 export default async function handler(req, res) {
   try {
-    // 1. Pull the Supabase path out of the rewrite-injected __path param
-    const { __path, ...restQuery } = req.query;
-    const targetPath = Array.isArray(__path) ? __path.join('/') : (__path || '');
+    // 1. Target path comes from Vercel's named capture (req.query.path)
+    const rawPath = req.query.path ?? req.query.__path ?? '';
+    const targetPath = Array.isArray(rawPath) ? rawPath.join('/') : rawPath;
 
-    // 2. Rebuild the original query string (preserve duplicate keys, e.g. multiple filters)
+    // 2. Rebuild the original query string, dropping internal keys
     const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(restQuery)) {
+    for (const [key, value] of Object.entries(req.query)) {
+      if (INTERNAL_KEYS.has(key)) continue;
       if (Array.isArray(value)) value.forEach((v) => params.append(key, v));
       else params.append(key, value);
     }
