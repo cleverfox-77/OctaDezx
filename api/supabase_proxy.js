@@ -39,15 +39,18 @@ export default async function handler(req, res) {
 
     // 5. Proxy to Supabase
     const upstream = await fetch(destination, options);
-    const text = await upstream.text();
+
+    // Read as raw bytes so binary payloads (images from storage) aren't
+    // corrupted by UTF-8 text decoding. Works for JSON responses too.
+    const buffer = Buffer.from(await upstream.arrayBuffer());
 
     // 6. Forward relevant response headers back
-    for (const header of ['content-type', 'content-range', 'x-total-count', 'range-unit']) {
+    for (const header of ['content-type', 'content-range', 'x-total-count', 'range-unit', 'cache-control']) {
       const value = upstream.headers.get(header);
       if (value) res.setHeader(header, value);
     }
 
-    res.status(upstream.status).send(text);
+    res.status(upstream.status).send(buffer);
   } catch (err) {
     console.error('PROXY ERROR:', err);
     res.status(500).json({ message: 'Proxy failed', error: err.message });
