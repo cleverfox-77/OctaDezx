@@ -27,3 +27,25 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Dev / debug scratch files — never commit or deploy these
+debug.log
+debug_*.txt
+debug_*.js
+debug_output.txt
+debug_matcher.js
+test-*.js
+get-models-raw.js
+list-gemini-models.js
+models.json
+schema_dump.sql
+check_*.py
+fix_*.py
+
+# Local HTML test harnesses
+create-test-business.html
+list-businesses.html
+test-auth.html
+
+# Accidental nested migration copies (real migrations live in supabase/migrations/*.sql only)
+supabase/migrations/supabase/

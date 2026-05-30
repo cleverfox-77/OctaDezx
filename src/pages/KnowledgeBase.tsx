@@ -14,8 +14,10 @@ interface KnowledgeBaseProps {
 interface Entry {
   id: string;
   title: string;
-  content: string | null;  // ✅ FIXED: Match database schema
+  content: string | null;
   created_at: string;
+  url?: string;
+  source_type?: string;
 }
 
 const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ businessId }) => {
@@ -68,16 +70,16 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ businessId }) => {
       const { data, error } = await supabase
         .from('knowledge_base_articles')
         .insert([
-          { 
-            business_id: businessId, 
-            title: newEntry.title, 
-            content: newEntry.content 
+          {
+            business_id: businessId,
+            title: newEntry.title,
+            content: newEntry.content
           }
         ])
         .select();
 
       if (error) throw error;
-      
+
       if (data) {
         setEntries([data[0], ...entries]);
         setNewEntry({ title: "", content: "" });
@@ -159,6 +161,8 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ businessId }) => {
           This section allows you to add and manage the information your AI assistant will use to answer customer questions.
         </p>
       </div>
+
+      {/* Manual Entry Form */}
       <Card>
         <CardHeader>
           <CardTitle>Add New Entry</CardTitle>
@@ -166,12 +170,13 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ businessId }) => {
         <CardContent>
           <form onSubmit={handleCreateEntry} className="space-y-4">
             <Input
-              placeholder="Entry Title (e.g., 'Refund Policy')"
+              placeholder="Topic Title (e.g., 'Return Policy' or 'Sizing Guide')"
               value={newEntry.title}
               onChange={(e) => setNewEntry({ ...newEntry, title: e.target.value })}
             />
             <Textarea
-              placeholder="Entry Content (e.g., 'Our refund policy allows for returns within 30 days of purchase...')"
+              placeholder="Detailed Content. Tip: Write this like a Q&A. 
+Example: 'Q: How do returns work? A: You can return items within 30 days if they are unworn...'"
               value={newEntry.content}
               onChange={(e) => setNewEntry({ ...newEntry, content: e.target.value })}
               rows={5}
@@ -181,6 +186,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ businessId }) => {
         </CardContent>
       </Card>
 
+      {/* Entry List */}
       <Card>
         <CardHeader>
           <CardTitle>Existing Entries</CardTitle>
@@ -189,7 +195,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ businessId }) => {
           {loading ? (
             <p>Loading entries...</p>
           ) : entries.length === 0 ? (
-            <p>No entries found. Add one above to get started!</p>
+            <p>No entries found. Add one above or run the scraper to get started!</p>
           ) : (
             <div className="space-y-4">
               {entries.map((entry) => (
@@ -214,7 +220,19 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ businessId }) => {
                     <div>
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="font-bold text-lg">{entry.title}</h3>
+                          <div className="flex items-center gap-2">
+                            <h3 className="font-bold text-lg">{entry.title}</h3>
+                            {entry.source_type === 'scraper' && (
+                              <span className="bg-blue-100 text-blue-800 text-xs px-2 py-0.5 rounded-full border border-blue-200">
+                                Scraper
+                              </span>
+                            )}
+                            {entry.url && (
+                              <a href={entry.url} target="_blank" rel="noopener noreferrer" className="text-xs text-muted-foreground hover:underline">
+                                {entry.url}
+                              </a>
+                            )}
+                          </div>
                           <p className="text-sm text-muted-foreground">{new Date(entry.created_at).toLocaleString()}</p>
                         </div>
                         <div className="flex space-x-2">
@@ -226,7 +244,7 @@ const KnowledgeBase: React.FC<KnowledgeBaseProps> = ({ businessId }) => {
                           </Button>
                         </div>
                       </div>
-                      <p className="mt-2 whitespace-pre-wrap">{entry.content || 'No content'}</p>
+                      <p className="mt-2 whitespace-pre-wrap max-h-40 overflow-y-auto">{entry.content || 'No content'}</p>
                     </div>
                   )}
                 </div>

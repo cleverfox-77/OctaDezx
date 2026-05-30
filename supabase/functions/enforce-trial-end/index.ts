@@ -1,59 +1,67 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.42.0";
 
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.42.0'
-import { corsHeaders } from '../_shared/cors.ts'
+// This function is intended to be called by a cron job only.
+// It requires a secret bearer token (CRON_SECRET env var) to prevent
+// any anonymous caller from mass-expiring trial users.
 
-serve(async (_req) => {
+serve(async (req) => {
+  // ── Secret token guard ────────────────────────────────────────────────────
+  const cronSecret = Deno.env.get("CRON_SECRET");
+  const authHeader = req.headers.get("Authorization");
+
+  if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+  // ─────────────────────────────────────────────────────────────────────────
+
   try {
-    // Create a Supabase client with the service role key
     const supabaseAdmin = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
-    // Get the current time in ISO format
-    const now = new Date().toISOString();
+    // Find trial profiles whose 24h window has passed.
+    // Uses trial_start_timestamp (the correct column) — not the non-existent trial_ends_at.
+    const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    // Find profiles where the trial has ended but status is still active
     const { data: expiredProfiles, error: selectError } = await supabaseAdmin
-      .from('profiles')
-      .select('id')
-      .eq('subscription_status', 'active')
-      .lt('trial_ends_at', now);
+      .from("profiles")
+      .select("user_id")
+      .eq("subscription_status", "trial")
+      .lt("trial_start_timestamp", cutoff);
 
-    if (selectError) {
-      throw selectError;
-    }
+    if (selectError) throw selectError;
 
     if (!expiredProfiles || expiredProfiles.length === 0) {
       return new Response(JSON.stringify({ message: "No expired trials found." }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" },
         status: 200,
       });
     }
 
-    // Prepare the IDs of the profiles to update
-    const profileIds = expiredProfiles.map(p => p.id);
+    const userIds = expiredProfiles.map((p: any) => p.user_id);
 
-    // Update the subscription_status for the expired profiles
     const { error: updateError } = await supabaseAdmin
-      .from('profiles')
-      .update({ subscription_status: 'inactive' })
-      .in('id', profileIds);
+      .from("profiles")
+      .update({ subscription_status: "expired", plan_type: "free" })
+      .in("user_id", userIds);
 
-    if (updateError) {
-      throw updateError;
-    }
+    if (updateError) throw updateError;
 
-    return new Response(JSON.stringify({ message: `Successfully deactivated ${profileIds.length} expired trial(s).` }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
-
+    return new Response(
+      JSON.stringify({ message: `Expired ${userIds.length} trial(s).` }),
+      { headers: { "Content-Type": "application/json" }, status: 200 }
+    );
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    console.error("enforce-trial-end error:", error);
+    return new Response(JSON.stringify({ error: "Internal server error" }), {
+      headers: { "Content-Type": "application/json" },
       status: 500,
     });
   }
-})
+});
