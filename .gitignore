@@ -49,3 +49,5 @@ test-auth.html
 
 # Accidental nested migration copies (real migrations live in supabase/migrations/*.sql only)
 supabase/migrations/supabase/
+.vercel
+.env*.local

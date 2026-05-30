@@ -1,11 +1,15 @@
 {
   "functions": {
-    "api/supabase/[...path].js": {
+    "api/supabase_proxy.js": {
       "memory": 256,
       "maxDuration": 10
     }
   },
   "rewrites": [
+    {
+      "source": "/api/supabase/:path*",
+      "destination": "/api/supabase_proxy?__path=:path*"
+    },
     {
       "source": "/((?!api/).*)",
       "destination": "/index.html"

@@ -1,19 +1,22 @@
-// Catch-all proxy: Vercel routes every /api/supabase/* request here.
-// The path segments after /api/supabase/ arrive in req.query.path (an array).
+// Single-file proxy. vercel.json rewrites /api/supabase/* here, passing the
+// Supabase path as the `__path` query param and preserving all other params.
 const SUPABASE_URL = 'https://dnjhvfmlmvhabrlpcmao.supabase.co';
 
 export default async function handler(req, res) {
   try {
-    // 1. Rebuild the target path from the catch-all segments
-    const { path = [] } = req.query;
-    const segments = Array.isArray(path) ? path : [path];
-    const targetPath = segments.join('/');
+    // 1. Pull the Supabase path out of the rewrite-injected __path param
+    const { __path, ...restQuery } = req.query;
+    const targetPath = Array.isArray(__path) ? __path.join('/') : (__path || '');
 
-    // 2. Preserve the exact original query string (Supabase filters, select, order, etc.)
-    const qIndex = req.url.indexOf('?');
-    const search = qIndex >= 0 ? req.url.slice(qIndex) : '';
+    // 2. Rebuild the original query string (preserve duplicate keys, e.g. multiple filters)
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(restQuery)) {
+      if (Array.isArray(value)) value.forEach((v) => params.append(key, v));
+      else params.append(key, value);
+    }
+    const qs = params.toString();
 
-    const destination = `${SUPABASE_URL}/${targetPath}${search}`;
+    const destination = `${SUPABASE_URL}/${targetPath}${qs ? '?' + qs : ''}`;
     console.log('Proxying to:', destination);
 
     // 3. Forward only the headers Supabase needs
@@ -24,13 +27,12 @@ export default async function handler(req, res) {
 
     // 4. Build fetch options
     const options = { method: req.method, headers };
-
     if (req.method !== 'GET' && req.method !== 'HEAD') {
       options.body = req.body ? JSON.stringify(req.body) : undefined;
       headers['content-type'] = headers['content-type'] || 'application/json';
     }
 
-    // 5. Proxy the request
+    // 5. Proxy to Supabase
     const upstream = await fetch(destination, options);
     const text = await upstream.text();
 
