@@ -1,22 +1,47 @@
 const SUPABASE_URL = 'https://dnjhvfmlmvhabrlpcmao.supabase.co';
 
 export default async function handler(req, res) {
-  // 1. EXTRACT PATH FROM URL (not from query params)
-  // req.url = /api/supabase/rest/v1/businesses?id=eq.123
-  const rawUrl = req.url;
-  const pathStart = rawUrl.indexOf('/api/supabase/');
-  const afterProxy = rawUrl.slice(pathStart + '/api/supabase/'.length);
+  try {
+    // 1. BUILD DESTINATION URL FROM req.url DIRECTLY
+    const rawUrl = req.url; 
+    // rawUrl looks like: /api/supabase_proxy?... (internal) 
+    // but we need the original path from the rewrite
+    // The original request path is in req.headers['x-forwarded-uri'] or we parse req.url
+    
+    const marker = '/api/supabase/';
+    const originalUrl = req.headers['x-matched-path'] || req.url;
+    
+    let afterMarker = '';
+    const markerIndex = req.url.indexOf(marker);
+    
+    if (markerIndex !== -1) {
+      afterMarker = req.url.slice(markerIndex + marker.length);
+    } else {
+      // Fallback: get path from __path query param
+      const url = new URL(req.url, 'http://localhost');
+      afterMarker = url.searchParams.get('__path') || '';
+      url.searchParams.delete('__path');
+      const qs = url.searchParams.toString();
+      const destination = `${SUPABASE_URL}/${afterMarker}${qs ? '?' + qs : ''}`;
+      return await proxyRequest(req, res, destination);
+    }
 
-  // Split path and query string
-  const [path, ...qsParts] = afterProxy.split('?');
-  const queryString = qsParts.join('?');
+    const [path, ...qsParts] = afterMarker.split('?');
+    const queryString = qsParts.join('?');
+    const destination = `${SUPABASE_URL}/${path}${queryString ? '?' + queryString : ''}`;
 
-  const destination = `${SUPABASE_URL}/${path}${queryString ? '?' + queryString : ''}`;
+    return await proxyRequest(req, res, destination);
 
-  // 2. FORWARD ONLY NECESSARY HEADERS
+  } catch (err) {
+    console.error('Proxy error:', err);
+    res.status(500).json({ message: 'Proxy internal error', error: err.message });
+  }
+}
+
+async function proxyRequest(req, res, destination) {
+  // 2. FILTER HEADERS
   const allowedHeaders = /^(apikey|authorization|content-type|accept|prefer|range)$/i;
   const forwardHeaders = {};
-
   for (const [key, value] of Object.entries(req.headers)) {
     if (allowedHeaders.test(key)) {
       forwardHeaders[key] = value;
@@ -29,29 +54,27 @@ export default async function handler(req, res) {
     headers: forwardHeaders,
   };
 
-  if (req.method !== 'GET' && req.method !== 'HEAD') {
-    const body = await getRawBody(req);
-    if (body) {
-      fetchOptions.body = body;
-      forwardHeaders['content-type'] = forwardHeaders['content-type'] || 'application/json';
+  // Vercel pre-parses body — use req.body directly
+  if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
+    fetchOptions.body = typeof req.body === 'string' 
+      ? req.body 
+      : JSON.stringify(req.body);
+    if (!forwardHeaders['content-type']) {
+      forwardHeaders['content-type'] = 'application/json';
     }
   }
 
-  // 4. PROXY TO SUPABASE
-  const supabaseResponse = await fetch(destination, fetchOptions);
+  // 4. CALL SUPABASE
+  const supabaseRes = await fetch(destination, fetchOptions);
 
   // 5. FORWARD RESPONSE HEADERS
   const allowedResponseHeaders = ['content-type', 'content-range', 'x-total-count', 'range-unit'];
   for (const header of allowedResponseHeaders) {
-    const value = supabaseResponse.headers.get(header);
-    if (value) res.setHeader(header, value);
+    const val = supabaseRes.headers.get(header);
+    if (val) res.setHeader(header, val);
   }
 
-  // 6. RETURN RESPONSE
-  const data = await supabaseResponse.text();
-  res.status(supabaseResponse.status).send(data);
+  // 6. SEND RESPONSE
+  const text = await supabaseRes.text();
+  res.status(supabaseRes.status).send(text);
 }
-
-// Helper to read raw request body
-function getRawBody(req) {
-  return new Promis
