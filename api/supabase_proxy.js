@@ -1,80 +1,38 @@
-const SUPABASE_URL = 'https://dnjhvfmlmvhabrlpcmao.supabase.co';
-
 export default async function handler(req, res) {
+  const SUPABASE_URL = 'https://dnjhvfmlmvhabrlpcmao.supabase.co';
+
   try {
-    // 1. BUILD DESTINATION URL FROM req.url DIRECTLY
-    const rawUrl = req.url; 
-    // rawUrl looks like: /api/supabase_proxy?... (internal) 
-    // but we need the original path from the rewrite
-    // The original request path is in req.headers['x-forwarded-uri'] or we parse req.url
-    
-    const marker = '/api/supabase/';
-    const originalUrl = req.headers['x-matched-path'] || req.url;
-    
-    let afterMarker = '';
-    const markerIndex = req.url.indexOf(marker);
-    
-    if (markerIndex !== -1) {
-      afterMarker = req.url.slice(markerIndex + marker.length);
-    } else {
-      // Fallback: get path from __path query param
-      const url = new URL(req.url, 'http://localhost');
-      afterMarker = url.searchParams.get('__path') || '';
-      url.searchParams.delete('__path');
-      const qs = url.searchParams.toString();
-      const destination = `${SUPABASE_URL}/${afterMarker}${qs ? '?' + qs : ''}`;
-      return await proxyRequest(req, res, destination);
+    // Extract everything after /api/supabase_proxy
+    const url = new URL(req.url, 'https://placeholder.com');
+    const fullPath = url.pathname.replace(/^\/api\/supabase_proxy/, '');
+    const destination = `${SUPABASE_URL}${fullPath}${url.search}`;
+
+    console.log('Proxying to:', destination);
+
+    const headers = {};
+    for (const key of ['apikey', 'authorization', 'content-type', 'accept', 'prefer', 'range']) {
+      if (req.headers[key]) headers[key] = req.headers[key];
     }
 
-    const [path, ...qsParts] = afterMarker.split('?');
-    const queryString = qsParts.join('?');
-    const destination = `${SUPABASE_URL}/${path}${queryString ? '?' + queryString : ''}`;
+    const options = { method: req.method, headers };
 
-    return await proxyRequest(req, res, destination);
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      options.body = req.body ? JSON.stringify(req.body) : undefined;
+      headers['content-type'] = headers['content-type'] || 'application/json';
+    }
+
+    const upstream = await fetch(destination, options);
+    const text = await upstream.text();
+
+    const ct = upstream.headers.get('content-type');
+    if (ct) res.setHeader('content-type', ct);
+    const cr = upstream.headers.get('content-range');
+    if (cr) res.setHeader('content-range', cr);
+
+    res.status(upstream.status).send(text);
 
   } catch (err) {
-    console.error('Proxy error:', err);
-    res.status(500).json({ message: 'Proxy internal error', error: err.message });
+    console.error('PROXY ERROR:', err);
+    res.status(500).json({ message: 'Failed to parse response', error: err.message });
   }
-}
-
-async function proxyRequest(req, res, destination) {
-  // 2. FILTER HEADERS
-  const allowedHeaders = /^(apikey|authorization|content-type|accept|prefer|range)$/i;
-  const forwardHeaders = {};
-  for (const [key, value] of Object.entries(req.headers)) {
-    if (allowedHeaders.test(key)) {
-      forwardHeaders[key] = value;
-    }
-  }
-
-  // 3. BUILD FETCH OPTIONS
-  const fetchOptions = {
-    method: req.method,
-    headers: forwardHeaders,
-  };
-
-  // Vercel pre-parses body — use req.body directly
-  if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
-    fetchOptions.body = typeof req.body === 'string' 
-      ? req.body 
-      : JSON.stringify(req.body);
-    if (!forwardHeaders['content-type']) {
-      forwardHeaders['content-type'] = 'application/json';
-    }
-  }
-
-  // 4. CALL SUPABASE
-  const supabaseRes = await fetch(destination, fetchOptions);
-
-  // 5. FORWARD RESPONSE HEADERS
-  const allowedResponseHeaders = ['content-type', 'content-range', 'x-total-count', 'range-unit'];
-  for (const header of allowedResponseHeaders) {
-    const val = supabaseRes.headers.get(header);
-    if (val) res.setHeader(header, val);
-  }
-
-  // 6. SEND RESPONSE
-  const text = await supabaseRes.text();
-  res.status(supabaseRes.status).send(text);
 }
