@@ -1,69 +1,45 @@
-<?php
-/* supabase_proxy.php - Bypassing cPanel Restrictions */
+const SUPABASE_URL = 'https://dnjhvfmlmvhabrlpcmao.supabase.co';
 
-// 1. CONFIGURATION
-$SUPABASE_URL = 'https://dnjhvfmlmvhabrlpcmao.supabase.co';
+export default async function handler(req, res) {
+  // 1. GET PATH & CLEAN QUERY STRING
+  const { __path, ...restQuery } = req.query;
+  const path = __path || '';
 
-// 2. GET THE PATH & METHOD
-// We get the 'path' from the .htaccess rewrite (see Step 2 below)
-$path = isset($_GET['__path']) ? $_GET['__path'] : '';
-$method = $_SERVER['REQUEST_METHOD'];
+  const queryString = new URLSearchParams(restQuery).toString();
+  const destination = `${SUPABASE_URL}/${path}${queryString ? '?' + queryString : ''}`;
 
-// 3. PREPARE THE DESTINATION URL
-// We must manually reconstruct the query string (e.g. ?id=eq.123)
-$queryString = $_SERVER['QUERY_STRING'];
-// Remove the internal '__path' parameter we added in .htaccess
-$queryString = preg_replace('/__path=[^&]*&?/', '', $queryString);
+  // 2. FORWARD ONLY NECESSARY HEADERS
+  const allowedHeaders = /^(apikey|authorization|content-type|accept|prefer|range)$/i;
+  const forwardHeaders = {};
 
-$destination = $SUPABASE_URL . '/' . $path . ($queryString ? '?' . $queryString : '');
-
-// 4. INITIALIZE CURL
-$ch = curl_init($destination);
-
-// 5. FORWARD HEADERS (Crucial for Auth & API Keys)
-$requestHeaders = [];
-foreach (getallheaders() as $key => $value) {
-    // Only forward necessary headers to avoid conflicts
-    if (preg_match('/^(apikey|authorization|content-type|accept|prefer|range)$/i', $key)) {
-        $requestHeaders[] = "$key: $value";
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (allowedHeaders.test(key)) {
+      forwardHeaders[key] = value;
     }
+  }
+
+  // 3. BUILD FETCH OPTIONS
+  const fetchOptions = {
+    method: req.method,
+    headers: forwardHeaders,
+  };
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    fetchOptions.body = JSON.stringify(req.body);
+    forwardHeaders['content-type'] = forwardHeaders['content-type'] || 'application/json';
+  }
+
+  // 4. PROXY REQUEST TO SUPABASE
+  const supabaseResponse = await fetch(destination, fetchOptions);
+
+  // 5. FORWARD SUPABASE RESPONSE HEADERS BACK
+  const allowedResponseHeaders = ['content-type', 'content-range', 'x-total-count', 'range-unit'];
+  for (const header of allowedResponseHeaders) {
+    const value = supabaseResponse.headers.get(header);
+    if (value) res.setHeader(header, value);
+  }
+
+  // 6. RETURN RESPONSE
+  const data = await supabaseResponse.text();
+  res.status(supabaseResponse.status).send(data);
 }
-curl_setopt($ch, CURLOPT_HTTPHEADER, $requestHeaders);
-
-// 6. CONFIGURE CURL OPTIONS
-curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-curl_setopt($ch, CURLOPT_HEADER, true); // We need to read response headers
-
-// Handle Body for POST/UPDATE/etc
-if ($method !== 'GET') {
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-    $input = file_get_contents('php://input');
-    if ($input) {
-        curl_setopt($ch, CURLOPT_POSTFIELDS, $input);
-    }
-}
-
-// 7. EXECUTE REQUEST
-$response = curl_exec($ch);
-$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-$headerSize = curl_getinfo($ch, CURLINFO_HEADER_SIZE);
-
-// 8. SEPARATE HEADERS & BODY
-$responseHeaders = substr($response, 0, $headerSize);
-$responseBody = substr($response, $headerSize);
-
-curl_close($ch);
-
-// 9. RETURN RESPONSE TO FRONTEND
-http_response_code($httpCode);
-
-// Forward Supabase response headers (like Content-Type, Content-Range)
-foreach (explode("\r\n", $responseHeaders) as $headerLine) {
-    if (strpos($headerLine, ':') !== false) {
-        header($headerLine);
-    }
-}
-
-echo $responseBody;
-?>
