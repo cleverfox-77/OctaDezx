@@ -51,3 +51,9 @@ test-auth.html
 supabase/migrations/supabase/
 .vercel
 .env*.local
+
+# Raw AI-generated asset masters (~100MB) — archived on R2 under source/, not in git
+New Assets/
+
+# Python cache
+__pycache__/

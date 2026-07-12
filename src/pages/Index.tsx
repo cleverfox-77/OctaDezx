@@ -11,6 +11,12 @@ import {
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { SEO } from "@/components/SEO";
 import { LogoIcon } from "@/components/ui/Logo";
+import Preloader from "@/components/landing/Preloader";
+import ParticleField from "@/components/landing/ParticleField";
+import Magnetic from "@/components/landing/Magnetic";
+import ProductTour from "@/components/landing/ProductTour";
+import AmbientVideo from "@/components/landing/AmbientVideo";
+import { useCountUp } from "@/hooks/useCountUp";
 import "../styles/landing.css";
 
 /* ── Material Symbol ── */
@@ -43,7 +49,7 @@ const CHAT_STEPS: ChatStep[] = [
   { sender: "ai",       text: "Yes! Available in sizes S, M, L and XL. Which would you like? 👟" },
   { sender: "customer", text: "What's the price?" },
   { sender: "ai",       text: "$49 with free delivery on orders above $30. Want to order? 🛍️" },
-  { sender: "customer", text: "Yes please — Size M.", action: "processing" },
+  { sender: "customer", text: "Yes please, Size M.", action: "processing" },
   { sender: "ai",       text: "Perfect! Share your name, delivery address and phone to confirm. 📦" },
   { sender: "customer", text: "John Doe, 42 Maple Street, NYC. 646XXXXXXXX" },
   { sender: "ai",       text: "✅ Confirmed! Size M ships in 3–5 days. Order #OD-20482. Thanks, John! 🎉", action: "confirmed" },
@@ -66,10 +72,95 @@ const NAV_LINKS = [
   { label: "Support",      href: "#contact"   },
 ];
 
+const clientLogos = [
+  { name: "alo",         src: "/clients/alo.png"        },
+  { name: "Clarks",      src: "/clients/clarks.png"     },
+  { name: "Dr. Martens", src: "/clients/dr-martens.png" },
+  { name: "Cole Haan",   src: "/clients/cole-haan.png"  },
+  { name: "Gymshark",    src: "/clients/gymshark.png"   },
+  { name: "Nothing",     src: "/clients/nothing.png"    },
+  { name: "Anker",       src: "/clients/anker.webp"     },
+  { name: "Timberland",  src: "/clients/timberland.jpg" },
+  { name: "Logitech",    src: "/clients/logitech.png"   },
+  { name: "Pini Parma",  src: "/clients/pini-parma.jpg" },
+  { name: "Price & Pierce", src: "/clients/price-pierce.png" },
+];
+
+const testimonials = [
+  {
+    quote:
+      "Before OctaDezx, our team was drowning in repetitive questions about sizing, fabrics and shipping. Now the AI handles every customer conversation in their own language, around the clock. Our response time went from hours to seconds and our online sales have grown without us adding a single new hire.",
+    name: "Thomas Pini",
+    role: "CEO, Pini Parma",
+    photo: "/clients/thomas-pini.jpg",
+    logo: "/clients/pini-parma.jpg",
+  },
+  {
+    quote:
+      "We deal with complex client enquiries across multiple markets, and OctaDezx understood our catalogue almost instantly. It resolves the routine questions on its own and escalates only what truly needs a human. Our customers feel looked after 24/7, and that reliability has directly helped us grow our accounts.",
+    name: "Tim Shave",
+    role: "CEO, Price & Pierce",
+    photo: "/clients/tim-shave.jpg",
+    logo: "/clients/price-pierce.png",
+  },
+];
+
 const DEMO_BUSINESS_ID = "a9a0d41a-6651-4d59-9e66-a8b15ba068f1";
 const DEMO_CHAT_URL    = `/chat/${DEMO_BUSINESS_ID}`;
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+/* CSS vignettes for feature cards without renders — keeps every card in the
+   grid on the same icon → visual → text rhythm, no extra image bytes */
+const LanguageViz = () => (
+  <div className="h-full w-full flex flex-col justify-center gap-2 px-4"
+    style={{ background: "#f7f8fa", border: "1px solid #eef0f3", borderRadius: "0.75rem" }}>
+    {[
+      ["¡Hola! ¿En qué puedo ayudarte?", "ES", "self-start"],
+      ["Bonjour ! Comment puis-je aider ?", "FR", "self-end"],
+      ["こんにちは！ご用件をどうぞ", "JA", "self-start"],
+    ].map(([txt, lang, align]) => (
+      <div key={lang} className={`flex items-center gap-2 ${align}`}>
+        <span className="px-2.5 py-1 rounded-full text-[11px] font-medium text-slate-700 bg-white whitespace-nowrap"
+          style={{ border: "1px solid #e8eaee", boxShadow: "0 1px 2px rgba(16,24,40,0.05)" }}>{txt}</span>
+        <span className="label text-[8px] text-slate-400">{lang}</span>
+      </div>
+    ))}
+  </div>
+);
+
+const LeadScoreViz = () => (
+  <div className="h-full w-full flex flex-col justify-center gap-3 px-4"
+    style={{ background: "#f7f8fa", border: "1px solid #eef0f3", borderRadius: "0.75rem" }}>
+    {[
+      { name: "Sofia — asking for bulk pricing", score: 92, tone: "#16a34a", tag: "Hot lead" },
+      { name: "James — comparing two models", score: 74, tone: "#d97706", tag: "Warm" },
+    ].map((l) => (
+      <div key={l.name}>
+        <div className="flex items-center justify-between mb-1.5">
+          <span className="text-[11px] font-medium text-slate-700 truncate pr-2">{l.name}</span>
+          <span className="text-[9px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+            style={{ color: l.tone, background: `${l.tone}14` }}>{l.tag} · {l.score}</span>
+        </div>
+        <div className="h-1.5 rounded-full overflow-hidden" style={{ background: "#e8eaee" }}>
+          <div className="h-full rounded-full" style={{ width: `${l.score}%`, background: `linear-gradient(90deg, #000047, ${l.tone})` }} />
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+/* Stat cell with count-up on first scroll into view */
+const StatCell = ({ value, label, sub }: { value: string; label: string; sub: string }) => {
+  const { ref, text } = useCountUp(value);
+  return (
+    <div className="flex flex-col items-center justify-center py-10 px-5 text-center" style={{ background: "#ffffff" }}>
+      <div ref={ref as React.RefObject<HTMLDivElement>} className="stat-num mb-1.5 cursor-default">{text}</div>
+      <div className="text-sm font-semibold text-slate-900 mb-1">{label}</div>
+      <div className="label text-[9px] text-slate-400">{sub}</div>
+    </div>
+  );
+};
 
 /* ════════════════════════════════════════════════════════════════
    Index
@@ -138,6 +229,59 @@ const Index = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  /* Scroll progress bar — synchronous transform write in a passive listener.
+     A scaleX write never invalidates layout, so this stays cheap even at
+     scroll-event frequency (and survives rAF throttling in embedded views). */
+  const progressRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const update = () => {
+      const h = document.documentElement;
+      const max = h.scrollHeight - h.clientHeight;
+      if (progressRef.current) progressRef.current.style.transform = `scaleX(${max > 0 ? h.scrollTop / max : 0})`;
+    };
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update, { passive: true });
+    update();
+    return () => { window.removeEventListener("scroll", update); window.removeEventListener("resize", update); };
+  }, []);
+
+  /* Highlight the nav link of whichever section crosses mid-viewport */
+  const [activeNav, setActiveNav] = useState("");
+  useEffect(() => {
+    const ids = ["features", "how", "tour", "pricing", "demo", "contact"];
+    const els = ids.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach((e) => { if (e.isIntersecting) setActiveNav(`#${e.target.id}`); }),
+      { rootMargin: "-45% 0px -45% 0px" }
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  /* GSAP scroll parallax — loaded lazily so it never delays first paint.
+     Targets wrapper elements only (never elements that own CSS keyframe
+     transforms, which would fight over the same property). */
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let revert: (() => void) | undefined;
+    let cancelled = false;
+    (async () => {
+      const [{ gsap }, { ScrollTrigger }] = await Promise.all([
+        import("gsap"),
+        import("gsap/ScrollTrigger"),
+      ]);
+      if (cancelled || !heroRef.current) return;
+      gsap.registerPlugin(ScrollTrigger);
+      const ctx = gsap.context(() => {
+        const st = { trigger: heroRef.current, start: "top top", end: "bottom top", scrub: 0.6 } as const;
+        gsap.to(".hero-visual", { y: -60, ease: "none", scrollTrigger: { ...st } });
+        gsap.to(".hero-copy",   { y: -24, opacity: 0.55, ease: "none", scrollTrigger: { ...st } });
+      });
+      revert = () => ctx.revert();
+    })();
+    return () => { cancelled = true; revert?.(); };
+  }, []);
+
   /* Bento 3D tilt — pointer devices only, no mobile CPU cost */
   useEffect(() => {
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
@@ -163,7 +307,7 @@ const Index = () => {
   /* Chat animation */
   const [chatIndex,   setChatIndex]   = useState(0);
   const [orderStatus, setOrderStatus] = useState<"idle" | "processing" | "confirmed">("idle");
-  const [orderName,   setOrderName]   = useState("—");
+  const [orderName,   setOrderName]   = useState("No order yet");
   const [successGlow, setSuccessGlow] = useState(false);
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const heroRef       = useRef<HTMLElement>(null);
@@ -190,7 +334,7 @@ const Index = () => {
     (async () => {
       while (alive) {
         if (!heroVisible.current) { await delay(500); continue; }
-        setChatIndex(0); setOrderStatus("idle"); setOrderName("—"); setSuccessGlow(false);
+        setChatIndex(0); setOrderStatus("idle"); setOrderName("No order yet"); setSuccessGlow(false);
         await delay(700);
         for (let i = 0; i < CHAT_STEPS.length && alive; i++) {
           if (!heroVisible.current) { await delay(500); i--; continue; }
@@ -217,12 +361,15 @@ const Index = () => {
      RENDER
   ───────────────────────────────────────────────────────────── */
   return (
-    <div className="octa-landing grain min-h-screen" style={{ background: "#080a12" }}>
+    <div className="octa-landing min-h-screen" style={{ background: "#f4f5f7", color: "#0f172a" }}>
       <SEO
-        title="OctaDezx — AI Sales Assistant | Sell More, Work Less"
+        title="OctaDezx: AI Sales Assistant | Sell More, Work Less"
         description="Always-on AI that answers customers, captures orders and syncs your catalogue across WhatsApp, Instagram, Facebook & Shopify. 24-hour free trial."
         canonical="https://octadezx.com/"
       />
+
+      <Preloader />
+      <div ref={progressRef} className="scroll-progress" aria-hidden="true" />
 
       {/* ══ NAV ══ */}
       <nav
@@ -232,7 +379,7 @@ const Index = () => {
             : "border-b border-transparent"
         }`}
         style={navScrolled
-          ? { background: "rgba(8,10,18,0.88)", borderColor: "rgba(255,255,255,0.06)", boxShadow: "0 1px 0 rgba(76,215,246,0.05)" }
+          ? { background: "rgba(255,255,255,0.85)", borderColor: "#e8eaee", boxShadow: "0 1px 3px rgba(16,24,40,0.04)" }
           : { background: "transparent" }
         }
       >
@@ -240,16 +387,18 @@ const Index = () => {
 
           <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
             <div className="relative">
-              <div className="absolute inset-0 rounded-lg blur-md opacity-50 group-hover:opacity-80 transition-opacity" style={{ background: "#2563eb" }} />
+              <div className="absolute inset-0 rounded-lg blur-md opacity-50 group-hover:opacity-80 transition-opacity" style={{ background: "#000047" }} />
               <LogoIcon size="md" className="relative" />
             </div>
-            <span className="text-[15px] font-bold tracking-[0.07em] uppercase text-white">OctaDezx</span>
+            <span className="text-[15px] font-bold tracking-[0.07em] uppercase text-slate-900">OctaDezx</span>
           </Link>
 
           <div className="hidden md:flex items-center gap-0.5">
             {NAV_LINKS.map((l) => (
               <a key={l.label} href={l.href}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all duration-200">
+                className={`nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 ${
+                  activeNav === l.href ? "active text-slate-900" : "text-slate-600"
+                }`}>
                 {l.label}
               </a>
             ))}
@@ -259,25 +408,25 @@ const Index = () => {
             {/* Notif */}
             <div ref={notifRef} className="relative hidden lg:block">
               <button onClick={openNotif} aria-label="Notifications"
-                className="relative text-slate-400 hover:text-white hover:bg-white/6 transition-all p-2 rounded-xl focus:outline-none">
+                className="relative text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all p-2 rounded-xl focus:outline-none">
                 <MI name="notifications" />
                 {notifDot && (
                   <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full status-pulse"
-                    style={{ background: "#4cd7f6", boxShadow: "0 0 0 2px #080a12" }} />
+                    style={{ background: "#000047", boxShadow: "0 0 0 2px #ffffff" }} />
                 )}
               </button>
               {notifOpen && (
-                <div className="absolute right-0 top-full mt-2 w-80 glass rounded-2xl shadow-2xl overflow-hidden z-50 drop-in">
-                  <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                    <span className="text-sm font-semibold text-white">Notifications</span>
-                    <span className="label text-slate-500">Mark all read</span>
+                <div className="absolute right-0 top-full mt-2 w-80 glass rounded-2xl shadow-xl overflow-hidden z-50 drop-in">
+                  <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "#eef0f3" }}>
+                    <span className="text-sm font-semibold text-slate-900">Notifications</span>
+                    <span className="label text-slate-400">Mark all read</span>
                   </div>
                   <div className="px-5 py-6 flex flex-col items-center text-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(76,215,246,0.08)" }}>
-                      <MI name="notifications_active" className="text-xl" style={{ color: "#4cd7f6" }} />
+                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(0,0,71,0.08)" }}>
+                      <MI name="notifications_active" className="text-xl" style={{ color: "#000047" }} />
                     </div>
-                    <p className="text-sm font-medium text-white">Stay in the loop</p>
-                    <p className="text-xs text-slate-400 leading-relaxed">Sign in to receive live order alerts, revenue updates and AI performance reports.</p>
+                    <p className="text-sm font-medium text-slate-900">Stay in the loop</p>
+                    <p className="text-xs text-slate-500 leading-relaxed">Sign in to receive live order alerts, revenue updates and AI performance reports.</p>
                     <Link to="/auth" onClick={() => setNotifOpen(false)}>
                       <button className="btn-cta text-white text-xs font-bold px-5 py-2.5 rounded-xl w-full mt-1">
                         Sign in to enable alerts
@@ -291,25 +440,25 @@ const Index = () => {
             {/* Settings */}
             <div ref={settingsRef} className="relative hidden lg:block">
               <button onClick={openSettings} aria-label="Settings"
-                className="text-slate-400 hover:text-white hover:bg-white/6 transition-all p-2 rounded-xl focus:outline-none">
+                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all p-2 rounded-xl focus:outline-none">
                 <MI name="settings" className={settingsOpen ? "animate-spin" : ""} />
               </button>
               {settingsOpen && (
-                <div className="absolute right-0 top-full mt-2 w-60 glass rounded-2xl shadow-2xl overflow-hidden z-50 drop-in">
-                  <div className="px-4 py-3 border-b" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
-                    <span className="label text-slate-500">Quick navigation</span>
+                <div className="absolute right-0 top-full mt-2 w-60 glass rounded-2xl shadow-xl overflow-hidden z-50 drop-in">
+                  <div className="px-4 py-3 border-b" style={{ borderColor: "#eef0f3" }}>
+                    <span className="label text-slate-400">Quick navigation</span>
                   </div>
                   <div className="py-2">
                     {NAV_LINKS.map((l) => (
                       <a key={l.label} href={l.href} onClick={() => setSettingsOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-300 hover:text-white hover:bg-white/5 transition-colors">
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
                         <MI name={l.label === "Features" ? "bolt" : l.label === "How it Works" ? "route" : l.label === "Pricing" ? "payments" : l.label === "Live Demo" ? "chat" : "support_agent"}
-                          className="text-base flex-shrink-0" style={{ color: "#b4c5ff" }} />
+                          className="text-base flex-shrink-0" style={{ color: "#000047" }} />
                         {l.label}
                       </a>
                     ))}
                   </div>
-                  <div className="px-4 py-3 border-t" style={{ borderColor: "rgba(255,255,255,0.06)" }}>
+                  <div className="px-4 py-3 border-t" style={{ borderColor: "#eef0f3" }}>
                     <Link to="/auth" onClick={() => setSettingsOpen(false)}>
                       <button className="w-full btn-cta text-white text-xs font-bold px-4 py-2.5 rounded-xl">Sign In / Dashboard</button>
                     </Link>
@@ -318,14 +467,16 @@ const Index = () => {
               )}
             </div>
 
-            <Link to="/auth" className="hidden sm:block">
-              <button className="btn-cta text-white px-5 py-2.5 rounded-xl text-sm font-bold tracking-tight">
-                Start Free
-              </button>
-            </Link>
+            <Magnetic className="hidden sm:block">
+              <Link to="/auth" className="block">
+                <button className="btn-cta text-white px-5 py-2.5 rounded-xl text-sm font-bold tracking-tight">
+                  Start Free
+                </button>
+              </Link>
+            </Magnetic>
 
             <button onClick={() => setMobileMenuOpen(v => !v)} aria-label="Toggle menu"
-              className="md:hidden p-2 rounded-xl text-slate-300 hover:bg-white/6 transition-colors focus:outline-none">
+              className="md:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none">
               {mobileMenuOpen ? <MI name="close" className="text-2xl" /> : <MI name="menu" className="text-2xl" />}
             </button>
           </div>
@@ -335,31 +486,31 @@ const Index = () => {
       {/* ══ MOBILE MENU ══ */}
       {mobileMenuOpen && (
         <div className="fixed inset-0 z-[99] md:hidden" onClick={closeMobileMenu}>
-          <div className="absolute inset-0 bg-black/65 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" />
           <div className="absolute top-0 right-0 h-full w-72 border-l flex flex-col menu-panel"
-            style={{ background: "#0c0e1e", borderColor: "rgba(255,255,255,0.07)" }}
+            style={{ background: "#ffffff", borderColor: "#e8eaee" }}
             onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 h-[68px] border-b" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
-              <span className="text-sm font-bold uppercase tracking-widest text-white">Menu</span>
-              <button onClick={closeMobileMenu} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/6 transition-colors">
+            <div className="flex items-center justify-between px-5 h-[68px] border-b" style={{ borderColor: "#e8eaee" }}>
+              <span className="text-sm font-bold uppercase tracking-widest text-slate-900">Menu</span>
+              <button onClick={closeMobileMenu} className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors">
                 <MI name="close" className="text-xl" />
               </button>
             </div>
             <nav className="flex flex-col px-4 py-4 gap-1 flex-grow">
               {NAV_LINKS.map((l) => (
                 <a key={l.label} href={l.href} onClick={closeMobileMenu}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-300 hover:text-white hover:bg-white/6 transition-colors">
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
                   <MI name={l.label === "Features" ? "bolt" : l.label === "How it Works" ? "route" : l.label === "Pricing" ? "payments" : l.label === "Live Demo" ? "chat" : "support_agent"}
-                    className="text-lg flex-shrink-0" style={{ color: "#b4c5ff" }} />
+                    className="text-lg flex-shrink-0" style={{ color: "#000047" }} />
                   {l.label}
                 </a>
               ))}
             </nav>
-            <div className="px-5 py-6 border-t" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+            <div className="px-5 py-6 border-t" style={{ borderColor: "#e8eaee" }}>
               <Link to="/auth" onClick={closeMobileMenu}>
-                <button className="w-full btn-cta text-white font-bold py-3 rounded-xl text-sm">Start Free — 24hr Trial</button>
+                <button className="w-full btn-cta text-white font-bold py-3 rounded-xl text-sm">Start 24hr Free Trial</button>
               </Link>
-              <p className="text-center text-[10px] text-slate-600 mt-3">No credit card · Full access</p>
+              <p className="text-center text-[10px] text-slate-400 mt-3">No credit card, full access</p>
             </div>
           </div>
         </div>
@@ -368,58 +519,63 @@ const Index = () => {
       {/* ══ BACKGROUND ══ */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
         <div className="absolute inset-0 grid-bg" />
-        <div className="orb w-[650px] h-[650px] opacity-[0.14]" style={{ top: "-15%", left: "-8%", background: "#2563eb", animationDuration: "16s" }} />
-        <div className="orb w-[550px] h-[550px] opacity-[0.10]" style={{ bottom: "5%", right: "-6%", background: "#7c3aed", animationDuration: "20s", animationDelay: "-7s" }} />
-        <div className="orb w-[320px] h-[320px] opacity-[0.07]" style={{ top: "38%", right: "22%", background: "#4cd7f6", animationDuration: "12s", animationDelay: "-3s" }} />
       </div>
 
       <main className="relative pt-[68px]">
 
         {/* ══ HERO ══ */}
         <section ref={heroRef} className="relative min-h-[calc(100svh-68px)] flex flex-col items-center justify-center px-4 sm:px-6 py-16 overflow-hidden">
-          <div className="max-w-[1320px] w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+          <ParticleField />
+          <div className="hero-aurora absolute -top-32 left-1/2 -translate-x-1/2" aria-hidden="true" />
+          <div className="max-w-[1440px] w-full mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center">
 
             {/* Left */}
-            <div className="z-10 text-center lg:text-left">
+            <div className="hero-copy z-10 text-center lg:text-left">
               <span className="label inline-block mb-4 px-3 py-1.5 rounded-full text-[10px]"
-                style={{ color: "#4cd7f6", background: "rgba(76,215,246,0.08)", border: "1px solid rgba(76,215,246,0.18)" }}>
+                style={{ color: "#000047", background: "rgba(0,0,71,0.08)", border: "1px solid rgba(0,0,71,0.18)" }}>
                 24/7 AI Customer Care &amp; Support Agent
               </span>
-              <h1 className="text-[2.2rem] sm:text-[3.5rem] md:text-[5rem] lg:text-[5.5rem] xl:text-[6rem] font-black text-white leading-[1.05] tracking-[-0.03em] mb-5 sm:mb-8">
+              <h1 className="text-[2.2rem] sm:text-[3.5rem] md:text-[5rem] lg:text-[5.5rem] xl:text-[6rem] font-black text-slate-900 leading-[1.05] tracking-[-0.03em] mb-5 sm:mb-8">
                 <span className="word-in block">AI Customer Care,</span>
                 <span className="word-in block grad-cyan">That Sells.</span>
               </h1>
 
               <p className="text-sm sm:text-lg font-normal max-w-[520px] mb-7 sm:mb-11 leading-relaxed mx-auto lg:mx-0"
-                style={{ color: "#8b9abf" }}>
-                OctaDezx is your always-on AI customer service agent — it answers customer
+                style={{ color: "#667085" }}>
+                OctaDezx is your always-on AI customer service agent that answers customer
                 questions, resolves support requests and captures orders across WhatsApp,
                 Instagram, Facebook and Shopify, 24/7 while you sleep.
               </p>
 
-              {/* CTAs — stacked on mobile, single row on sm+ */}
-              <div className="flex flex-col sm:flex-row flex-wrap gap-3 justify-center lg:justify-start items-stretch sm:items-center">
-                <Link to="/auth" className="w-full sm:w-auto">
-                  <button className="btn-cta text-white px-8 py-4 rounded-2xl text-sm sm:text-base font-bold w-full sm:w-auto whitespace-nowrap">
-                    Try Free for 24 Hours
-                  </button>
-                </Link>
-                <Link to={DEMO_CHAT_URL} className="w-full sm:w-auto">
-                  <button className="btn-ghost text-white px-7 py-4 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap"
-                    style={{ borderColor: "rgba(76,215,246,0.35)", background: "rgba(76,215,246,0.06)" }}>
-                    <MI name="chat" style={{ color: "#4cd7f6" }} />
-                    <span>Live Demo</span>
-                  </button>
-                </Link>
+              {/* CTAs — two primary actions in one row, video as a quiet link below */}
+              <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start items-stretch sm:items-center">
+                <Magnetic className="w-full sm:w-auto">
+                  <Link to="/auth" className="w-full sm:w-auto block">
+                    <button className="btn-cta text-white px-8 py-4 rounded-2xl text-sm sm:text-base font-bold w-full sm:w-auto whitespace-nowrap">
+                      Try Free for 24 Hours
+                    </button>
+                  </Link>
+                </Magnetic>
+                <Magnetic className="w-full sm:w-auto">
+                  <Link to={DEMO_CHAT_URL} className="w-full sm:w-auto block">
+                    <button className="btn-ghost px-7 py-4 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap">
+                      <MI name="chat" style={{ color: "#000047" }} />
+                      <span>Live Demo</span>
+                    </button>
+                  </Link>
+                </Magnetic>
+              </div>
+
+              <div className="flex justify-center lg:justify-start mt-4">
                 <Dialog>
                   <DialogTrigger asChild>
-                    <button className="btn-ghost text-white px-7 py-4 rounded-2xl text-sm sm:text-base font-bold flex items-center justify-center gap-2 w-full sm:w-auto whitespace-nowrap">
-                      <MI name="play_circle" style={{ color: "#4cd7f6" }} />
-                      <span>See It in Action</span>
+                    <button className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 hover:text-slate-900 transition-colors">
+                      <MI name="play_circle" className="text-xl" style={{ color: "#000047" }} />
+                      <span>See it in action</span>
                     </button>
                   </DialogTrigger>
                   <DialogContent className="w-[95vw] sm:max-w-[820px] p-0 overflow-hidden"
-                    style={{ background: "#080a12", borderColor: "rgba(255,255,255,0.08)" }}>
+                    style={{ background: "#ffffff", borderColor: "#e8eaee" }}>
                     <DialogHeader className="sr-only">
                       <DialogTitle>OctaDezx Demo</DialogTitle>
                       <DialogDescription>See OctaDezx in action</DialogDescription>
@@ -432,45 +588,45 @@ const Index = () => {
               </div>
 
               <p className="text-xs mt-6 flex items-center gap-2 text-slate-500 justify-center lg:justify-start">
-                <MI name="check_circle" className="text-sm flex-shrink-0" style={{ color: "#4cd7f6" }} />
-                No credit card · Full access · Cancel anytime
+                <MI name="check_circle" className="text-sm flex-shrink-0" style={{ color: "#000047" }} />
+                No credit card, full access, cancel anytime
               </p>
             </div>
 
             {/* Right — chat widget */}
-            <div className="relative hidden lg:flex items-center justify-center h-[580px]">
+            <div className="hero-visual relative hidden lg:flex items-center justify-center h-[580px]">
 
               {/* Floating badges */}
               <div className="badge-float absolute top-10 left-2 glass px-4 py-3 rounded-2xl flex items-center gap-3 z-20"
-                style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.45)" }}>
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(34,197,94,0.15)" }}>
-                  <MI name="trending_up" className="text-base" style={{ color: "#22c55e" }} />
+                style={{ boxShadow: "0 12px 30px rgba(16,24,40,0.12)" }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(34,197,94,0.12)" }}>
+                  <MI name="trending_up" className="text-base" style={{ color: "#16a34a" }} />
                 </div>
                 <div>
-                  <div className="label text-[9px] text-slate-500">Orders today</div>
-                  <div className="text-sm font-bold text-white">+248 <span className="text-green-400 text-xs font-semibold">+12%</span></div>
+                  <div className="label text-[9px] text-slate-400">Orders today</div>
+                  <div className="text-sm font-bold text-slate-900">+248 <span className="text-green-600 text-xs font-semibold">+12%</span></div>
                 </div>
               </div>
 
-              <div className="badge-float-2 absolute top-20 right-2 glass px-4 py-3 rounded-2xl flex items-center gap-3 z-20"
-                style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.45)" }}>
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(76,215,246,0.12)" }}>
-                  <MI name="bolt" className="text-base" style={{ color: "#4cd7f6" }} />
+              <div className="badge-float-2 absolute top-40 -right-1 glass px-4 py-3 rounded-2xl flex items-center gap-3 z-20"
+                style={{ boxShadow: "0 12px 30px rgba(16,24,40,0.12)" }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,71,0.10)" }}>
+                  <MI name="bolt" className="text-base" style={{ color: "#000047" }} />
                 </div>
                 <div>
-                  <div className="label text-[9px] text-slate-500">Response time</div>
-                  <div className="text-sm font-bold text-white">&lt;1.2s</div>
+                  <div className="label text-[9px] text-slate-400">Response time</div>
+                  <div className="text-sm font-bold text-slate-900">&lt;1.2s</div>
                 </div>
               </div>
 
-              <div className="badge-float-3 absolute bottom-14 right-2 glass px-4 py-3 rounded-2xl flex items-center gap-3 z-20"
-                style={{ boxShadow: "0 8px 30px rgba(0,0,0,0.45)" }}>
-                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(180,197,255,0.12)" }}>
-                  <MI name="language" className="text-base" style={{ color: "#b4c5ff" }} />
+              <div className="badge-float-3 absolute bottom-2 right-6 glass px-4 py-3 rounded-2xl flex items-center gap-3 z-20"
+                style={{ boxShadow: "0 12px 30px rgba(16,24,40,0.12)" }}>
+                <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(79,70,229,0.10)" }}>
+                  <MI name="language" className="text-base" style={{ color: "#4f46e5" }} />
                 </div>
                 <div>
-                  <div className="label text-[9px] text-slate-500">Languages</div>
-                  <div className="text-sm font-bold text-white">50+</div>
+                  <div className="label text-[9px] text-slate-400">Languages</div>
+                  <div className="text-sm font-bold text-slate-900">50+</div>
                 </div>
               </div>
 
@@ -480,22 +636,22 @@ const Index = () => {
 
                 {/* Window chrome */}
                 <div className="flex items-center justify-between px-5 py-3.5 border-b flex-shrink-0"
-                  style={{ borderColor: "rgba(76,215,246,0.1)", background: "rgba(255,255,255,0.02)" }}>
+                  style={{ borderColor: "#eef0f3", background: "#f9fafb" }}>
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0"
-                      style={{ background: "linear-gradient(135deg,#2563eb,#4cd7f6)" }}>
+                      style={{ background: "linear-gradient(135deg,#000047,#4f46e5)" }}>
                       <MI name="smart_toy" className="text-sm text-white" />
                     </div>
                     <div>
-                      <div className="text-xs font-semibold text-white">OctaDezx AI</div>
+                      <div className="text-xs font-semibold text-slate-900">OctaDezx AI</div>
                       <div className="flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-green-400 status-pulse" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500 status-pulse" />
                         <span className="label text-[9px] text-slate-500">Online · Handling 14 chats</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex gap-1.5">
-                    {["bg-red-500/50","bg-yellow-500/50","bg-green-500/50"].map((c,i) => (
+                    {["bg-red-400","bg-yellow-400","bg-green-400"].map((c,i) => (
                       <span key={i} className={`w-2.5 h-2.5 rounded-full ${c}`} />
                     ))}
                   </div>
@@ -503,28 +659,28 @@ const Index = () => {
 
                 {/* Messages */}
                 <div ref={chatScrollRef} className="flex-grow px-4 py-4 space-y-3 overflow-y-auto transition-opacity duration-500"
-                  style={{ scrollbarWidth: "none" }}>
+                  style={{ scrollbarWidth: "none", background: "#fbfcfd" }}>
                   {visibleSteps.map((s, i) => (
                     <div key={i} className={`msg-in flex ${s.sender === "ai" ? "justify-end" : "justify-start"}`}>
                       <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs font-medium leading-relaxed ${
-                        s.sender === "ai" ? "bubble-ai text-white rounded-tr-none" : "bubble-user text-slate-200 rounded-tl-none"
+                        s.sender === "ai" ? "bubble-ai text-white rounded-tr-none" : "bubble-user text-slate-800 rounded-tl-none"
                       }`}>{s.text}</div>
                     </div>
                   ))}
                 </div>
 
                 {/* Status bar */}
-                <div className="px-4 pb-4 flex-shrink-0">
+                <div className="px-4 pb-4 flex-shrink-0" style={{ background: "#fbfcfd" }}>
                   <div className="rounded-xl px-3.5 py-2.5 flex items-center justify-between"
-                    style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                    style={{ background: "#f2f4f7", border: "1px solid #e8eaee" }}>
                     <div className="flex items-center gap-2">
-                      <MI name="shopping_cart" className="text-sm" style={{ color: "#b4c5ff" }} />
-                      <span className="text-[10px] text-slate-400 font-medium">{orderName}</span>
+                      <MI name="shopping_cart" className="text-sm" style={{ color: "#4f46e5" }} />
+                      <span className="text-[10px] text-slate-600 font-medium">{orderName}</span>
                     </div>
                     <span className="label text-[9px] px-2.5 py-0.5 rounded-full font-semibold" style={
-                      orderStatus === "idle"       ? { background: "rgba(76,215,246,0.1)",  color: "#4cd7f6"  } :
-                      orderStatus === "processing" ? { background: "rgba(234,179,8,0.1)",   color: "#eab308" } :
-                                                     { background: "rgba(34,197,94,0.12)",  color: "#22c55e" }
+                      orderStatus === "idle"       ? { background: "rgba(0,0,71,0.1)",  color: "#000047"  } :
+                      orderStatus === "processing" ? { background: "rgba(234,179,8,0.14)",  color: "#b45309" } :
+                                                     { background: "rgba(34,197,94,0.14)",  color: "#15803d" }
                     }>
                       {orderStatus === "idle" ? "● Listening" : orderStatus === "processing" ? "⟳ Processing" : "✓ Confirmed"}
                     </span>
@@ -535,7 +691,7 @@ const Index = () => {
                 <div className="absolute bottom-0 left-0 right-0 h-[2px] transition-all duration-700"
                   style={{ background: successGlow
                     ? "linear-gradient(90deg,transparent,#22c55e,transparent)"
-                    : "linear-gradient(90deg,transparent,#4cd7f6,transparent)" }} />
+                    : "linear-gradient(90deg,transparent,#000047,transparent)" }} />
               </div>
             </div>
           </div>
@@ -545,48 +701,48 @@ const Index = () => {
             <div className="chat-win rounded-2xl overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between px-4 py-3 border-b flex-shrink-0"
-                style={{ borderColor: "rgba(76,215,246,0.1)", background: "rgba(255,255,255,0.02)" }}>
+                style={{ borderColor: "#eef0f3", background: "#f9fafb" }}>
                 <div className="flex items-center gap-2.5">
                   <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg,#2563eb,#4cd7f6)" }}>
+                    style={{ background: "linear-gradient(135deg,#000047,#4f46e5)" }}>
                     <MI name="smart_toy" className="text-xs text-white" />
                   </div>
                   <div>
-                    <div className="text-xs font-semibold text-white">OctaDezx AI</div>
+                    <div className="text-xs font-semibold text-slate-900">OctaDezx AI</div>
                     <div className="flex items-center gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 status-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 status-pulse" />
                       <span className="label text-[9px] text-slate-500">Live</span>
                     </div>
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  {["bg-red-500/40","bg-yellow-500/40","bg-green-500/40"].map((c,i) => (
+                  {["bg-red-400","bg-yellow-400","bg-green-400"].map((c,i) => (
                     <span key={i} className={`w-2 h-2 rounded-full ${c}`} />
                   ))}
                 </div>
               </div>
               {/* Messages */}
-              <div className="px-4 py-3 space-y-2.5 max-h-52 overflow-hidden">
+              <div className="px-4 py-3 space-y-2.5 max-h-52 overflow-hidden" style={{ background: "#fbfcfd" }}>
                 {visibleSteps.slice(-5).map((s, i) => (
                   <div key={i} className={`msg-in flex ${s.sender === "ai" ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[82%] px-3 py-2 rounded-xl text-xs leading-relaxed ${
-                      s.sender === "ai" ? "bubble-ai text-white" : "bubble-user text-slate-200"
+                      s.sender === "ai" ? "bubble-ai text-white" : "bubble-user text-slate-800"
                     }`}>{s.text}</div>
                   </div>
                 ))}
               </div>
               {/* Status bar */}
-              <div className="px-4 pb-3 flex-shrink-0">
+              <div className="px-4 pb-3 flex-shrink-0" style={{ background: "#fbfcfd" }}>
                 <div className="rounded-lg px-3 py-2 flex items-center justify-between"
-                  style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  style={{ background: "#f2f4f7", border: "1px solid #e8eaee" }}>
                   <div className="flex items-center gap-1.5">
-                    <MI name="shopping_cart" className="text-xs" style={{ color: "#b4c5ff" }} />
-                    <span className="text-[10px] text-slate-400 font-medium">{orderName}</span>
+                    <MI name="shopping_cart" className="text-xs" style={{ color: "#4f46e5" }} />
+                    <span className="text-[10px] text-slate-600 font-medium">{orderName}</span>
                   </div>
                   <span className="label text-[9px] px-2 py-0.5 rounded-full font-semibold" style={
-                    orderStatus === "idle"       ? { background: "rgba(76,215,246,0.1)",  color: "#4cd7f6"  } :
-                    orderStatus === "processing" ? { background: "rgba(234,179,8,0.1)",   color: "#eab308" } :
-                                                   { background: "rgba(34,197,94,0.12)",  color: "#22c55e" }
+                    orderStatus === "idle"       ? { background: "rgba(0,0,71,0.1)",  color: "#000047"  } :
+                    orderStatus === "processing" ? { background: "rgba(234,179,8,0.14)",  color: "#b45309" } :
+                                                   { background: "rgba(34,197,94,0.14)",  color: "#15803d" }
                   }>
                     {orderStatus === "idle" ? "● Listening" : orderStatus === "processing" ? "⟳ Processing" : "✓ Confirmed"}
                   </span>
@@ -595,44 +751,121 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Scroll cue */}
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 opacity-35">
-            <span className="label text-[9px] text-slate-600">Scroll</span>
-            <div className="w-px h-10" style={{ background: "linear-gradient(to bottom,rgba(76,215,246,0.6),transparent)" }} />
-          </div>
         </section>
 
 
 
         {/* ══ STATS ══ */}
-        <section className="py-10 sm:py-14 px-4 sm:px-6 max-w-[1320px] mx-auto">
+        <section className="py-10 sm:py-14 px-4 sm:px-6 max-w-[1440px] mx-auto">
           <div className="stagger grid grid-cols-2 lg:grid-cols-4 gap-px"
-            style={{ background: "rgba(255,255,255,0.05)", borderRadius: "20px", overflow: "hidden" }}>
+            style={{ background: "#e8eaee", borderRadius: "20px", overflow: "hidden", border: "1px solid #e8eaee" }}>
             {[
               { value: "24/7",  label: "Always Online",      sub: "Zero downtime, every timezone"  },
               { value: "<10s",  label: "Product Onboarding", sub: "Paste URL, go live instantly"    },
               { value: "50+",   label: "Integrations",       sub: "Every major sales channel"       },
               { value: "99.9%", label: "Uptime SLA",         sub: "Enterprise reliability built in" },
-            ].map((s,i) => (
-              <div key={i} className="flex flex-col items-center justify-center py-10 px-5 text-center"
-                style={{ background: "#080a12" }}>
-                <div className="stat-num text-white mb-1.5 cursor-default">{s.value}</div>
-                <div className="text-sm font-semibold text-white mb-1">{s.label}</div>
-                <div className="label text-[9px] text-slate-600">{s.sub}</div>
-              </div>
+            ].map((s) => (
+              <StatCell key={s.label} value={s.value} label={s.label} sub={s.sub} />
             ))}
           </div>
         </section>
 
-        <div className="divider max-w-[1320px] mx-auto" />
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        {/* ══ CLIENTS ══ */}
+        <section className="py-10 sm:py-14 overflow-hidden">
+          <div className="text-center mb-8 reveal px-4">
+            <span className="label text-[10px]" style={{ color: "#667085" }}>Trusted by leading brands</span>
+          </div>
+          <div className="marquee-mask overflow-hidden">
+            <div className="animate-marquee flex w-max items-center gap-6 sm:gap-8">
+              {[...clientLogos, ...clientLogos].map((c, i) => (
+                <div
+                  key={i}
+                  title={c.name}
+                  className="flex-shrink-0 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-white flex items-center justify-center p-3 sm:p-4 grayscale opacity-80 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                  style={{ boxShadow: "0 2px 10px rgba(16,24,40,0.08)", border: "1px solid #eceef2" }}
+                >
+                  <img
+                    src={c.src}
+                    alt={c.name}
+                    loading="lazy"
+                    className="max-w-full max-h-full object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        {/* ══ TESTIMONIALS ══ */}
+        <section className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
+          <div className="text-center mb-10 sm:mb-14 reveal">
+            <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Customer stories</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Leaders who grew with OctaDezx</h2>
+            <p className="max-w-2xl mx-auto text-base" style={{ color: "#667085" }}>
+              Hear how founders use OctaDezx to look after every customer and scale their business without scaling their support team.
+            </p>
+          </div>
+
+          {/* Case-study banner */}
+          <div className="reveal-s relative rounded-[2rem] overflow-hidden mb-6 sm:mb-8"
+            style={{ boxShadow: "0 2px 6px rgba(16,24,40,0.06), 0 24px 60px rgba(16,24,40,0.14)" }}>
+            <img src="/media/store-owner.webp" alt="Boutique owner chatting with a customer while OctaDezx handles store messages on a tablet"
+              loading="lazy" decoding="async" className="w-full h-[240px] sm:h-[340px] object-cover" />
+            <div className="absolute inset-0 flex items-end"
+              style={{ background: "linear-gradient(to top, rgba(2,6,23,0.72) 0%, rgba(2,6,23,0.12) 45%, transparent 70%)" }}>
+              <div className="p-6 sm:p-9">
+                <p className="text-white text-lg sm:text-2xl font-black tracking-tight mb-1">
+                  Real stores. Real customers. Zero missed messages.
+                </p>
+                <p className="text-white/75 text-xs sm:text-sm">While owners run the shop floor, OctaDezx runs the inbox.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="stagger grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6">
+            {testimonials.map((t, i) => (
+              <figure
+                key={i}
+                className="glass rounded-3xl p-7 sm:p-9 flex flex-col"
+              >
+                <MI name="format_quote" className="text-4xl mb-4" style={{ color: "#000047" }} />
+                <blockquote className="text-base sm:text-lg leading-relaxed text-slate-700 flex-grow">
+                  “{t.quote}”
+                </blockquote>
+                <figcaption className="flex items-center gap-4 mt-7 pt-6" style={{ borderTop: "1px solid #e8eaee" }}>
+                  <img
+                    src={t.photo}
+                    alt={t.name}
+                    loading="lazy"
+                    className="w-14 h-14 rounded-full object-cover flex-shrink-0"
+                    style={{ boxShadow: "0 4px 14px rgba(16,24,40,0.12)" }}
+                  />
+                  <div className="min-w-0">
+                    <div className="text-slate-900 font-semibold leading-tight">{t.name}</div>
+                    <div className="text-sm text-slate-500">{t.role}</div>
+                  </div>
+                  <div className="ml-auto w-12 h-12 rounded-full bg-white flex items-center justify-center p-2 flex-shrink-0" style={{ border: "1px solid #eceef2" }}>
+                    <img src={t.logo} alt={t.role} loading="lazy" className="max-w-full max-h-full object-contain" />
+                  </div>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </section>
+
+        <div className="divider max-w-[1440px] mx-auto" />
 
         {/* ══ FEATURES ══ */}
-        <section id="features" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1320px] mx-auto">
+        <section id="features" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
           <div className="text-center mb-10 sm:mb-14 reveal">
-            <span className="label text-[10px] mb-4 block" style={{ color: "#b4c5ff" }}>Capabilities</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">Customer care and sales, fully automated</h2>
-            <p className="max-w-2xl mx-auto text-base" style={{ color: "#8b9abf" }}>
-              One AI platform that handles customer support, answers product questions and closes orders —
+            <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Capabilities</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Customer care and sales, fully automated</h2>
+            <p className="max-w-2xl mx-auto text-base" style={{ color: "#667085" }}>
+              One AI platform that handles customer support, answers product questions and closes orders
               across every channel, running non-stop while you focus on what matters.
             </p>
           </div>
@@ -642,45 +875,56 @@ const Index = () => {
             {/* Wide card */}
             <div className="sm:col-span-2 bento glass rounded-[2rem] p-7 sm:p-10 relative overflow-hidden reveal-l" style={{ minHeight: 290 }}>
               <div className="bento-glow absolute inset-0 rounded-[2rem]" />
-              <div className="relative z-10 flex flex-col h-full justify-between">
+              <div className="relative z-10 flex flex-col h-full justify-between md:max-w-[55%]">
                 <div>
                   <div className="w-11 h-11 rounded-2xl flex items-center justify-center mb-5"
-                    style={{ background: "rgba(76,215,246,0.1)" }}>
-                    <MI name="dynamic_feed" className="text-xl" style={{ color: "#4cd7f6" }} />
+                    style={{ background: "rgba(0,0,71,0.1)" }}>
+                    <MI name="dynamic_feed" className="text-xl" style={{ color: "#000047" }} />
                   </div>
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-3 tracking-tight">Autonomous order processing</h3>
-                  <p className="text-sm sm:text-base leading-relaxed max-w-md" style={{ color: "#8b9abf" }}>
-                    From first message to confirmed shipment — verifies payments, reserves stock, notifies your team, sends branded confirmations. Continuously, in every timezone.
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 mb-3 tracking-tight">Autonomous order processing</h3>
+                  <p className="text-sm sm:text-base leading-relaxed max-w-md" style={{ color: "#667085" }}>
+                    From first message to confirmed shipment. It verifies payments, reserves stock, notifies your team, sends branded confirmations. Continuously, in every timezone.
                   </p>
                 </div>
                 <div className="mt-8 flex flex-wrap gap-2">
                   {["Stock Sync","Auto-Ship","Payments","Refunds"].map((t) => (
-                    <span key={t} className="px-3 py-1 rounded-full label text-[10px] text-slate-400"
-                      style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>{t}</span>
+                    <span key={t} className="px-3 py-1 rounded-full label text-[10px] text-slate-600"
+                      style={{ background: "#f2f4f7", border: "1px solid #e8eaee" }}>{t}</span>
                   ))}
                 </div>
               </div>
-              <div className="absolute -bottom-16 -right-16 w-64 h-64 rounded-full opacity-10 pointer-events-none"
-                style={{ background: "radial-gradient(circle,#2563eb 0%,transparent 65%)" }} />
+              {/* Product render, soft-masked into the card's right half */}
+              <img src="/media/hero-chat.webp" alt="OctaDezx support chat confirming an order with live sales stats"
+                loading="lazy" decoding="async"
+                className="hidden md:block absolute right-0 top-0 h-full w-[52%] object-cover object-left pointer-events-none transition-transform duration-700 group-hover:scale-[1.02]"
+                style={{ maskImage: "linear-gradient(to right, transparent, #000 22%)", WebkitMaskImage: "linear-gradient(to right, transparent, #000 22%)" }} />
             </div>
 
-            {/* Small cards */}
+            {/* Small cards — identical rhythm: icon, visual (image or vignette), text */}
             {[
-              { icon: "translate",   color: "#d2bbff", bg: "rgba(210,187,255,0.1)", title: "Speak any language",       desc: "Native-quality responses across 50+ languages, auto-detected per customer.", hover: "group-hover:rotate-12" },
-              { icon: "bolt",        color: "#b4c5ff", bg: "rgba(180,197,255,0.1)", title: "Instant, on-brand replies", desc: "Trained on your catalogue, policies and voice — sounds like you, not a bot.", hover: "group-hover:scale-125" },
-              { icon: "insights",    color: "#4cd7f6", bg: "rgba(76,215,246,0.1)",  title: "Revenue-grade analytics",  desc: "Conversion, AOV, resolution time and top products — live in one dashboard.", hover: "group-hover:scale-110" },
-              { icon: "shield_lock", color: "#d2bbff", bg: "rgba(210,187,255,0.1)", title: "Enterprise security",       desc: "End-to-end encryption, role-based access, GDPR-ready infrastructure.", hover: "group-hover:rotate-6" },
-              { icon: "target",      color: "#b4c5ff", bg: "rgba(180,197,255,0.1)", title: "Smart lead scoring",        desc: "High-intent conversations auto-routed to your sales team with full context.", hover: "group-hover:scale-110" },
+              { icon: "translate",   color: "#7c3aed", bg: "rgba(124,58,237,0.1)", title: "Speak any language",       desc: "Native-quality responses across 50+ languages, auto-detected per customer.", hover: "group-hover:rotate-12", viz: <LanguageViz /> },
+              { icon: "bolt",        color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Instant, on-brand replies", desc: "Trained on your catalogue, policies and voice, so it sounds like you, not a bot.", hover: "group-hover:scale-125", img: "/media/card-training.webp", imgAlt: "Documents flowing into the OctaDezx AI core" },
+              { icon: "insights",    color: "#000047", bg: "rgba(0,0,71,0.1)", title: "Revenue-grade analytics",  desc: "Conversion, AOV, resolution time and top products, live in one dashboard.", hover: "group-hover:scale-110", img: "/media/card-analytics.webp", imgAlt: "Rising conversion bar chart with a 94% resolution badge" },
+              { icon: "shield_lock", color: "#4f46e5", bg: "rgba(79,70,229,0.1)",  title: "Enterprise security",       desc: "End-to-end encryption, role-based access, GDPR-ready infrastructure.", hover: "group-hover:rotate-6", img: "/media/card-security.webp", imgAlt: "Navy octagonal shield with a glowing keyhole" },
+              { icon: "target",      color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Smart lead scoring",        desc: "High-intent conversations auto-routed to your sales team with full context.", hover: "group-hover:scale-110", viz: <LeadScoreViz /> },
             ].map((card, i) => (
               <div key={card.title}
-                className={`bento rounded-[2rem] p-7 flex flex-col justify-between group ${["reveal-r","reveal","reveal-l","reveal","reveal-r"][i]}`}
-                style={{ background: "#0d0f1e", border: "1px solid rgba(255,255,255,0.06)", minHeight: 220 }}>
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: card.bg }}>
+                className={`bento rounded-[2rem] p-7 flex flex-col group overflow-hidden ${["reveal-r","reveal","reveal-l","reveal","reveal-r"][i]}`}
+                style={{ background: "#ffffff", border: "1px solid #e8eaee", minHeight: 220 }}>
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 mb-4" style={{ background: card.bg }}>
                   <MI name={card.icon} className={`text-xl transition-transform duration-300 ${card.hover}`} style={{ color: card.color }} />
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white mb-2 tracking-tight">{card.title}</h3>
-                  <p className="text-xs sm:text-sm leading-relaxed" style={{ color: "#8b9abf" }}>{card.desc}</p>
+                <div className="h-32 flex-shrink-0 rounded-xl overflow-hidden">
+                  {"img" in card && card.img ? (
+                    <img src={card.img} alt={card.imgAlt ?? ""} loading="lazy" decoding="async"
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
+                  ) : (
+                    card.viz
+                  )}
+                </div>
+                <div className="pt-5">
+                  <h3 className="text-lg font-bold text-slate-900 mb-2 tracking-tight">{card.title}</h3>
+                  <p className="text-xs sm:text-sm leading-relaxed" style={{ color: "#667085" }}>{card.desc}</p>
                 </div>
               </div>
             ))}
@@ -689,108 +933,166 @@ const Index = () => {
             <div className="sm:col-span-2 bento glass rounded-[2rem] p-7 sm:p-10 relative overflow-hidden reveal-l" style={{ minHeight: 240 }}>
               <div className="bento-glow absolute inset-0 rounded-[2rem]" />
               <div className="relative z-10 flex flex-col h-full justify-center">
-                <span className="label text-[10px] mb-2" style={{ color: "#4cd7f6" }}>One-click import</span>
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-white mb-3 tracking-tight">Paste a URL. Launch a catalogue.</h3>
-                <p className="max-w-lg mb-8 text-sm sm:text-base leading-relaxed" style={{ color: "#8b9abf" }}>
+                <span className="label text-[10px] mb-2" style={{ color: "#000047" }}>One-click import</span>
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-black text-slate-900 mb-3 tracking-tight">Paste a URL. Launch a catalogue.</h3>
+                <p className="max-w-lg mb-7 text-sm sm:text-base leading-relaxed" style={{ color: "#667085" }}>
                   Pulls product titles, variants, pricing and media from any storefront in under 10 seconds.
                 </p>
-                <div className="flex -space-x-2.5">
-                  {[{icon:"link",bg:"#1a2336"},{icon:"database",bg:"#1a2030"},{icon:"cloud_upload",bg:"#18223a"},{icon:"verified",bg:"#182870"}].map((b) => (
-                    <div key={b.icon} className="w-10 h-10 rounded-full flex items-center justify-center hover:-translate-y-2 transition-transform"
-                      style={{ background: b.bg, border: "3px solid #080a12" }}>
-                      <MI name={b.icon} className="text-sm text-white" />
-                    </div>
-                  ))}
+                {/* Mock import bar */}
+                <div className="flex items-center gap-2.5 max-w-md rounded-xl pl-4 pr-1.5 py-1.5"
+                  style={{ background: "#ffffff", border: "1px solid #e8eaee", boxShadow: "0 1px 3px rgba(16,24,40,0.06)" }}>
+                  <MI name="link" className="text-base flex-shrink-0" style={{ color: "#98a2b3" }} />
+                  <span className="text-xs sm:text-sm text-slate-500 font-medium truncate">https://yourstore.com/collections/all</span>
+                  <span className="ml-auto flex-shrink-0 text-[11px] font-bold text-white px-4 py-2 rounded-lg" style={{ background: "#000047" }}>
+                    Import
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 mt-3 max-w-md">
+                  <MI name="check_circle" className="text-sm flex-shrink-0" style={{ color: "#16a34a" }} />
+                  <span className="text-[11px] font-medium text-slate-500">Shopify · WooCommerce · Wix · any public catalogue</span>
                 </div>
               </div>
               <div className="absolute top-0 right-0 w-2/5 h-full pointer-events-none"
-                style={{ background: "linear-gradient(to left,rgba(76,215,246,0.04),transparent)" }} />
+                style={{ background: "linear-gradient(to left,rgba(0,0,71,0.04),transparent)" }} />
             </div>
 
           </div>
         </section>
 
-        <div className="divider max-w-[1320px] mx-auto" />
+        <div className="divider max-w-[1440px] mx-auto" />
 
         {/* ══ HOW IT WORKS ══ */}
-        <section id="how" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1100px] mx-auto">
+        <section id="how" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
           <div className="text-center mb-10 sm:mb-14 reveal">
-            <span className="label text-[10px] mb-4 block" style={{ color: "#4cd7f6" }}>Quick Start</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">Live in under 10 minutes</h2>
-            <p className="max-w-xl mx-auto text-base" style={{ color: "#8b9abf" }}>No developers, no integration team. Three steps.</p>
+            <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Quick Start</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Live in under 10 minutes</h2>
+            <p className="max-w-xl mx-auto text-base" style={{ color: "#667085" }}>No developers, no integration team. Three steps.</p>
           </div>
           <div className="stagger grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
             {[
-              { step: "01", title: "Import your catalogue", desc: "Paste any storefront URL or upload a CSV. Titles, variants, pricing and media structured automatically.", icon: "upload_file" },
-              { step: "02", title: "Train your AI",         desc: "Drop in policies, FAQs and brand voice. Adapts to how you answer — not a generic chatbot.",              icon: "psychology"   },
-              { step: "03", title: "Connect & go live",     desc: "Plug WhatsApp, Instagram, Facebook or your web widget. Orders start flowing in, 24/7.",                  icon: "rocket_launch" },
+              { step: "01", time: "~3 min", title: "Import your catalogue", desc: "Paste any storefront URL or upload a CSV. Titles, variants, pricing and media structured automatically.", icon: "upload_file",
+                checks: ["Works with any storefront URL or CSV", "Variants & pricing verified server-side"] },
+              { step: "02", time: "~5 min", title: "Train your AI",         desc: "Drop in policies, FAQs and brand voice. Adapts to how you answer, not a generic chatbot.",              icon: "psychology",
+                checks: ["Learns policies, FAQs & tone instantly", "Escalates to humans with full context"] },
+              { step: "03", time: "~2 min", title: "Connect & go live",     desc: "Plug WhatsApp, Instagram, Facebook or your web widget. Orders start flowing in, 24/7.",                  icon: "rocket_launch",
+                checks: ["WhatsApp · Instagram · Facebook · Web", "Answering customers the same minute"] },
             ].map((s) => (
-              <div key={s.step} className="step-card rounded-[2rem] p-7 sm:p-8 relative overflow-hidden">
+              <div key={s.step} className="step-card rounded-[2rem] p-7 sm:p-8 relative overflow-hidden flex flex-col">
                 <div className="flex items-start justify-between mb-6">
-                  <span className="text-5xl font-black leading-none select-none" style={{ color: "rgba(255,255,255,0.05)" }}>{s.step}</span>
-                  <div className="p-2.5 rounded-xl" style={{ background: "rgba(180,197,255,0.08)" }}>
-                    <MI name={s.icon} className="text-xl" style={{ color: "#b4c5ff" }} />
+                  <div>
+                    <span className="text-5xl font-black leading-none select-none block" style={{ color: "rgba(15,23,42,0.07)" }}>{s.step}</span>
+                    <span className="label text-[9px] mt-2 inline-block px-2 py-0.5 rounded-full"
+                      style={{ color: "#000047", background: "rgba(0,0,71,0.07)" }}>{s.time}</span>
+                  </div>
+                  <div className="p-2.5 rounded-xl" style={{ background: "rgba(0,0,71,0.08)" }}>
+                    <MI name={s.icon} className="text-xl" style={{ color: "#000047" }} />
                   </div>
                 </div>
-                <h3 className="text-lg font-bold text-white mb-2.5 tracking-tight">{s.title}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "#8b9abf" }}>{s.desc}</p>
+                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">{s.title}</h3>
+                <p className="text-sm leading-relaxed mb-5" style={{ color: "#667085" }}>{s.desc}</p>
+                <ul className="mt-auto space-y-2 pt-4" style={{ borderTop: "1px solid #eef0f3" }}>
+                  {s.checks.map((c) => (
+                    <li key={c} className="flex items-start gap-2 text-xs font-medium text-slate-600">
+                      <MI name="check_circle" className="text-sm flex-shrink-0 mt-[1px]" style={{ color: "#16a34a" }} />
+                      {c}
+                    </li>
+                  ))}
+                </ul>
               </div>
             ))}
+          </div>
+
+          {/* The three steps, in motion */}
+          <div className="reveal-s mt-6 sm:mt-8 rounded-[2rem] overflow-hidden hidden sm:block"
+            style={{ border: "1px solid #e8eaee", boxShadow: "0 2px 6px rgba(16,24,40,0.05), 0 24px 60px rgba(16,24,40,0.10)" }}>
+            <AmbientVideo
+              src="/media/loop-workflow.mp4"
+              poster="/media/loop-workflow-poster.webp"
+              label="Import your catalogue, train the AI, connect channels — animated walkthrough"
+              className="w-full block"
+            />
+          </div>
+        </section>
+
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        {/* ══ PRODUCT TOUR ══ */}
+        <section id="tour" className="relative py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
+          <img src="/media/bg-grid-orb.webp" alt="" aria-hidden="true" loading="lazy" decoding="async"
+            className="absolute inset-x-0 top-0 w-full h-full object-cover opacity-60 pointer-events-none select-none"
+            style={{ maskImage: "linear-gradient(to bottom, #000 0%, transparent 85%)", WebkitMaskImage: "linear-gradient(to bottom, #000 0%, transparent 85%)" }} />
+          <div className="relative text-center mb-8 sm:mb-10 reveal">
+            <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Inside the product</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+              A workspace your team will actually enjoy
+            </h2>
+            <p className="max-w-2xl mx-auto text-base" style={{ color: "#667085" }}>
+              This is the exact dashboard you get after sign-up — conversations, orders,
+              analytics and AI training, all in one calm place.
+            </p>
+          </div>
+          <div className="relative reveal-s">
+            <ProductTour />
           </div>
         </section>
 
         {/* ══ INTEGRATIONS ══ */}
         <section id="integrations" className="py-12 sm:py-20 relative overflow-hidden"
-          style={{ background: "rgba(13,15,28,0.7)" }}>
-          <div className="max-w-[1320px] mx-auto px-4 sm:px-6 text-center">
-            <span className="label text-[10px] mb-4 block reveal" style={{ color: "#b4c5ff" }}>Everything Connected</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 tracking-tight reveal">Find customers everywhere</h2>
-            <p className="max-w-2xl mx-auto mb-10 sm:mb-14 text-base reveal" style={{ color: "#8b9abf" }}>
-              Native integrations across messaging, e-commerce and productivity — synced in real time.
+          style={{ background: "#ebedf1" }}>
+          <div className="max-w-[1440px] mx-auto px-4 sm:px-6 text-center">
+            <span className="label text-[10px] mb-4 block reveal" style={{ color: "#000047" }}>Everything Connected</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight reveal">Find customers everywhere</h2>
+            <p className="max-w-2xl mx-auto mb-10 sm:mb-14 text-base reveal" style={{ color: "#667085" }}>
+              Native integrations across messaging, e-commerce and productivity, synced in real time.
             </p>
 
             {/* Orbital */}
             <div className="relative h-[460px] items-center justify-center hidden sm:flex reveal-s">
               <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full flex items-center justify-center relative z-20 hover:scale-105 transition-transform"
-                style={{ background: "linear-gradient(135deg,#2563eb,#4cd7f6)", boxShadow: "0 0 70px rgba(37,99,235,0.65),0 0 120px rgba(76,215,246,0.2)" }}>
+                style={{ background: "linear-gradient(135deg,#000047,#4f46e5)", boxShadow: "0 18px 50px rgba(0,0,71,0.35)" }}>
                 <MI name="hub" className="text-white" style={{ fontSize: "2.4rem" }} />
               </div>
-              <div className="absolute rounded-full" style={{ width: 320, height: 320, border: "1px solid rgba(76,215,246,0.07)", transform: "rotateX(62deg)" }} />
-              <div className="absolute rounded-full" style={{ width: 500, height: 500, border: "1px solid rgba(76,215,246,0.04)", transform: "rotateX(62deg)" }} />
+              <div className="absolute rounded-full" style={{ width: 320, height: 320, border: "1px solid rgba(0,0,71,0.12)", transform: "rotateX(62deg)" }} />
+              <div className="absolute rounded-full" style={{ width: 500, height: 500, border: "1px solid rgba(0,0,71,0.07)", transform: "rotateX(62deg)" }} />
               <div className="absolute w-full h-full flex items-center justify-center">
                 {INTEGRATIONS.map((it, i) => (
-                  <div key={it.name} className="orbit-item glass px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl flex items-center gap-2 cursor-pointer hover:bg-white/10 transition-colors"
+                  <div key={it.name} className="orbit-item glass px-3 py-2 sm:px-4 sm:py-2.5 rounded-xl flex items-center gap-2 cursor-pointer hover:-translate-y-0.5 transition-transform"
                     style={{ ["--rot" as string]: `${it.rot}deg`, animationDelay: `${-i * 3.3}s` } as React.CSSProperties}>
                     <MI name={it.icon} style={{ color: it.color }} />
-                    <span className="text-xs font-semibold text-white">{it.name}</span>
+                    <span className="text-xs font-semibold text-slate-800">{it.name}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Mobile grid */}
+            {/* Mobile: orbit render + grid */}
+            <div className="sm:hidden mb-6">
+              <img src="/media/channels-orbit.webp" alt="Messaging, social and commerce channels orbiting the OctaDezx core"
+                loading="lazy" decoding="async"
+                className="w-full max-w-[300px] mx-auto rounded-3xl mb-6" />
+            </div>
             <div className="grid grid-cols-2 gap-3 sm:hidden mb-8">
               {INTEGRATIONS.map((it) => (
                 <div key={it.name} className="glass rounded-2xl px-4 py-3.5 flex items-center gap-3">
                   <MI name={it.icon} className="text-xl flex-shrink-0" style={{ color: it.color }} />
-                  <span className="text-sm font-semibold text-white">{it.name}</span>
+                  <span className="text-sm font-semibold text-slate-800">{it.name}</span>
                 </div>
               ))}
             </div>
 
-            <button className="glass text-white px-6 py-3 rounded-xl font-semibold hover:bg-white/8 transition-all inline-flex items-center gap-2 text-sm reveal">
+            <button className="glass text-slate-800 px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition-all inline-flex items-center gap-2 text-sm reveal">
               View all 50+ integrations <MI name="arrow_forward" />
             </button>
           </div>
         </section>
 
-        <div className="divider max-w-[1320px] mx-auto" />
+        <div className="divider max-w-[1440px] mx-auto" />
 
         {/* ══ PRICING ══ */}
-        <section id="pricing" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1100px] mx-auto">
+        <section id="pricing" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
           <div className="text-center mb-10 sm:mb-14 reveal">
-            <span className="label text-[10px] mb-4 block" style={{ color: "#4cd7f6" }}>Simple Pricing</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">Plans for every stage</h2>
+            <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Simple Pricing</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Plans for every stage</h2>
             <p className="text-slate-500 max-w-xl mx-auto text-base">Start free for 24 hours. No credit card required.</p>
           </div>
 
@@ -799,36 +1101,36 @@ const Index = () => {
             <div className="glass rounded-[2rem] p-7 sm:p-9 flex flex-col hover:-translate-y-2 transition-transform duration-300">
               <div className="mb-7">
                 <div className="label text-slate-500 mb-2">Starter</div>
-                <div className="text-4xl font-black text-white tracking-tight">$9<span className="text-lg text-slate-600 font-medium">/mo</span></div>
-                <p className="text-sm text-slate-400 mt-2">Small businesses, boutiques, and startups.</p>
+                <div className="text-4xl font-black text-slate-900 tracking-tight">$9<span className="text-lg text-slate-400 font-medium">/mo</span></div>
+                <p className="text-sm text-slate-500 mt-2">Small businesses, boutiques, and startups.</p>
               </div>
               <ul className="space-y-3 mb-8 flex-grow">
                 {["300 unique customers / day","Essential automation tools","Core integrations","Email support"].map((f) => (
-                  <li key={f} className="flex items-start gap-3 text-sm text-slate-400">
-                    <MI name="check_circle" className="text-sm mt-0.5 flex-shrink-0" style={{ color: "#4cd7f6" }} />{f}
+                  <li key={f} className="flex items-start gap-3 text-sm text-slate-600">
+                    <MI name="check_circle" className="text-sm mt-0.5 flex-shrink-0" style={{ color: "#000047" }} />{f}
                   </li>
                 ))}
               </ul>
               <Link to="/auth">
-                <button className="w-full py-3.5 rounded-xl glass text-white font-bold hover:bg-white/8 transition-all text-sm">Get Started</button>
+                <button className="w-full py-3.5 rounded-xl glass text-slate-900 font-bold hover:bg-slate-50 transition-all text-sm">Get Started</button>
               </Link>
             </div>
 
             <div className="relative group md:-mt-6">
-              <div className="absolute -inset-[1px] rounded-[2rem] opacity-50 blur-sm"
-                style={{ background: "linear-gradient(135deg,#2563eb,#4cd7f6)" }} />
+              <div className="absolute -inset-[1px] rounded-[2rem] opacity-40 blur-sm"
+                style={{ background: "linear-gradient(135deg,#000047,#4f46e5)" }} />
               <div className="relative pricing-pro rounded-[2rem] p-7 sm:p-9 flex flex-col overflow-hidden">
                 <div className="absolute top-0 right-6 px-3 py-1 label text-[9px] text-white rounded-b-xl"
-                  style={{ background: "linear-gradient(135deg,#2563eb,#4cd7f6)" }}>Most Popular</div>
+                  style={{ background: "linear-gradient(135deg,#000047,#4f46e5)" }}>Most Popular</div>
                 <div className="mb-7">
-                  <div className="label mb-2" style={{ color: "#4cd7f6" }}>Pro Business</div>
-                  <div className="text-4xl font-black text-white tracking-tight">$29<span className="text-lg text-slate-500 font-medium">/mo</span></div>
-                  <p className="text-sm text-slate-300 mt-2">Growing businesses and marketing agencies.</p>
+                  <div className="label mb-2" style={{ color: "#000047" }}>Pro Business</div>
+                  <div className="text-4xl font-black text-slate-900 tracking-tight">$29<span className="text-lg text-slate-400 font-medium">/mo</span></div>
+                  <p className="text-sm text-slate-600 mt-2">Growing businesses and marketing agencies.</p>
                 </div>
                 <ul className="space-y-3 mb-8 flex-grow">
                   {["1,000 unique customers / day","Whitelabel branding","Priority processing","Advanced analytics & reporting"].map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm text-white">
-                      <MI name="check_circle" className="text-sm mt-0.5 flex-shrink-0" style={{ color: "#4cd7f6" }} />{f}
+                    <li key={f} className="flex items-start gap-3 text-sm text-slate-700">
+                      <MI name="check_circle" className="text-sm mt-0.5 flex-shrink-0" style={{ color: "#000047" }} />{f}
                     </li>
                   ))}
                 </ul>
@@ -841,73 +1143,89 @@ const Index = () => {
             <div className="glass rounded-[2rem] p-7 sm:p-9 flex flex-col hover:-translate-y-2 transition-transform duration-300">
               <div className="mb-7">
                 <div className="label text-slate-500 mb-2">Enterprise</div>
-                <div className="text-4xl font-black text-white tracking-tight">$99<span className="text-lg text-slate-600 font-medium">/mo</span></div>
-                <p className="text-sm text-slate-400 mt-2">Large-scale operations and expanding platforms.</p>
+                <div className="text-4xl font-black text-slate-900 tracking-tight">$99<span className="text-lg text-slate-400 font-medium">/mo</span></div>
+                <p className="text-sm text-slate-500 mt-2">Large-scale operations and expanding platforms.</p>
               </div>
               <ul className="space-y-3 mb-8 flex-grow">
                 {["Unlimited daily customers","100,000 messages / month","Dedicated success manager","Priority SLA & onboarding"].map((f) => (
-                  <li key={f} className="flex items-start gap-3 text-sm text-slate-400">
-                    <MI name="check_circle" className="text-sm mt-0.5 flex-shrink-0" style={{ color: "#d2bbff" }} />{f}
+                  <li key={f} className="flex items-start gap-3 text-sm text-slate-600">
+                    <MI name="check_circle" className="text-sm mt-0.5 flex-shrink-0" style={{ color: "#7c3aed" }} />{f}
                   </li>
                 ))}
               </ul>
               <Link to="/auth">
-                <button className="w-full py-3.5 rounded-xl glass text-white font-bold hover:bg-white/8 transition-all text-sm">Contact Sales</button>
+                <button className="w-full py-3.5 rounded-xl glass text-slate-900 font-bold hover:bg-slate-50 transition-all text-sm">Contact Sales</button>
               </Link>
             </div>
           </div>
 
           <p className="text-center text-sm text-slate-500 mt-9 flex items-center justify-center gap-2">
-            <MI name="check_circle" className="text-sm flex-shrink-0" style={{ color: "#22c55e" }} />
-            All plans include a 24-hour free trial — no credit card required
+            <MI name="check_circle" className="text-sm flex-shrink-0" style={{ color: "#16a34a" }} />
+            All plans include a 24-hour free trial, no credit card required
           </p>
         </section>
 
         {/* ══ LIVE DEMO ══ */}
-        <section id="demo" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1100px] mx-auto">
+        <section id="demo" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
           <div className="text-center mb-12 sm:mb-16 reveal">
-            <span className="label text-[10px] mb-4 flex items-center justify-center gap-2" style={{ color: "#22c55e" }}>
-              <span className="w-1.5 h-1.5 rounded-full bg-green-400 status-pulse inline-block" />
-              Live &amp; Working — No Account Needed
+            <span className="label text-[10px] mb-4 flex items-center justify-center gap-2" style={{ color: "#16a34a" }}>
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500 status-pulse inline-block" />
+              Live &amp; Working, No Account Needed
             </span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
               Try it yourself, right now
             </h2>
-            <p className="max-w-xl mx-auto text-base" style={{ color: "#8b9abf" }}>
-              Chat with <strong className="text-white">Merrell</strong> — a real premium leather shoe store powered by OctaDezx.
+            <p className="max-w-xl mx-auto text-base" style={{ color: "#667085" }}>
+              Chat with <strong className="text-slate-900">Merrell</strong>, a real premium leather shoe store powered by OctaDezx.
               Ask about products, prices, or place an order. It all works.
             </p>
           </div>
 
-          <div className="reveal-s max-w-[700px] mx-auto">
+          <div className="reveal-s max-w-[700px] lg:max-w-[1180px] mx-auto lg:grid lg:grid-cols-2 lg:gap-8 lg:items-stretch">
+            {/* Ambient product loop (desktop) */}
+            <div className="hidden lg:block relative rounded-[2rem] overflow-hidden"
+              style={{ border: "1px solid #e8eaee", boxShadow: "0 2px 6px rgba(16,24,40,0.06), 0 24px 60px rgba(16,24,40,0.14)" }}>
+              <AmbientVideo
+                src="/media/loop-hero.mp4"
+                poster="/media/hero-chat.webp"
+                label="OctaDezx support chat resolving and confirming an order, in motion"
+                className="w-full h-full object-cover absolute inset-0"
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-5"
+                style={{ background: "linear-gradient(to top, rgba(2,6,23,0.55), transparent)" }}>
+                <p className="text-white text-sm font-semibold">This is what your customers see — instant, polite, always on.</p>
+              </div>
+            </div>
+
+            <div>
             {/* Demo card */}
             <div className="relative rounded-[2rem] overflow-hidden"
-              style={{ background: "rgba(10,12,22,0.96)", border: "1px solid rgba(76,215,246,0.2)", boxShadow: "0 0 60px rgba(37,99,235,0.15), 0 32px 80px rgba(0,0,0,0.6)" }}>
+              style={{ background: "#ffffff", border: "1px solid #e8eaee", boxShadow: "0 2px 6px rgba(16,24,40,0.06), 0 24px 60px rgba(16,24,40,0.14)" }}>
 
               {/* Chat header */}
               <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
-                style={{ borderColor: "rgba(76,215,246,0.1)", background: "rgba(255,255,255,0.02)" }}>
+                style={{ borderColor: "#eef0f3", background: "#f9fafb" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-                    style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>M</div>
+                    style={{ background: "linear-gradient(135deg,#000047,#7c3aed)" }}>M</div>
                   <div>
-                    <div className="text-sm font-semibold text-white">Merrell</div>
+                    <div className="text-sm font-semibold text-slate-900">Merrell</div>
                     <div className="flex items-center gap-1.5">
-                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 status-pulse" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-500 status-pulse" />
                       <span className="label text-[9px] text-slate-500">Online · AI-powered by OctaDezx</span>
                     </div>
                   </div>
                 </div>
-                <span className="label text-[9px] px-2.5 py-1 rounded-full" style={{ background: "rgba(76,215,246,0.08)", color: "#4cd7f6", border: "1px solid rgba(76,215,246,0.15)" }}>
+                <span className="label text-[9px] px-2.5 py-1 rounded-full" style={{ background: "rgba(0,0,71,0.08)", color: "#000047", border: "1px solid rgba(0,0,71,0.15)" }}>
                   Premium Leather Shoes
                 </span>
               </div>
 
               {/* Preview messages */}
               <div className="px-5 py-5 space-y-3 pointer-events-none select-none"
-                style={{ background: "rgba(8,10,18,0.7)" }}>
+                style={{ background: "#f7f8fa" }}>
                 {[
-                  { sender: "ai",       text: "Hello! 👋 Welcome to Merrell — your destination for premium leather shoes. How can I help you today?" },
+                  { sender: "ai",       text: "Hello! 👋 Welcome to Merrell, your destination for premium leather shoes. How can I help you today?" },
                   { sender: "customer", text: "Do you have leather loafers for men?" },
                   { sender: "ai",       text: "Yes! We carry several premium leather loafers. Our best seller is the Merrell Classic Oxford in full-grain leather, available in sizes 7–13. Would you like to see the collection with prices? 👞" },
                   { sender: "customer", text: "Sure, what's the price range?" },
@@ -917,36 +1235,36 @@ const Index = () => {
                     <div className={`max-w-[80%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed font-medium ${
                       m.sender === "customer"
                         ? "text-white rounded-br-sm"
-                        : "text-white rounded-bl-sm"
+                        : "text-slate-800 rounded-bl-sm"
                     }`} style={m.sender === "customer"
-                      ? { background: "linear-gradient(135deg,#2563eb,#1d4ed8)", boxShadow: "0 4px 16px rgba(37,99,235,0.35)" }
-                      : { background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }
+                      ? { background: "linear-gradient(135deg,#000047,#1d4ed8)", boxShadow: "0 4px 16px rgba(0,0,71,0.30)" }
+                      : { background: "#ffffff", border: "1px solid #e8eaee" }
                     }>{m.text}</div>
                   </div>
                 ))}
                 {/* Typing hint */}
                 <div className="flex justify-start">
                   <div className="px-4 py-3 rounded-2xl rounded-bl-sm flex gap-1 items-center"
-                    style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.09)" }}>
-                    <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="w-2 h-2 rounded-full bg-slate-400 animate-bounce" style={{ animationDelay: "300ms" }} />
+                    style={{ background: "#ffffff", border: "1px solid #e8eaee" }}>
+                    <span className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="w-2 h-2 rounded-full bg-slate-300 animate-bounce" style={{ animationDelay: "300ms" }} />
                   </div>
                 </div>
               </div>
 
               {/* CTA overlay */}
-              <div className="relative px-5 pb-5 pt-2" style={{ background: "rgba(8,10,18,0.95)" }}>
+              <div className="relative px-5 pb-5 pt-2" style={{ background: "#ffffff" }}>
                 <div className="absolute top-0 left-0 right-0 h-12 pointer-events-none"
-                  style={{ background: "linear-gradient(to bottom, rgba(8,10,18,0), rgba(8,10,18,0.95))", marginTop: "-48px" }} />
+                  style={{ background: "linear-gradient(to bottom, rgba(247,248,250,0), #ffffff)", marginTop: "-48px" }} />
                 <Link to={DEMO_CHAT_URL}>
                   <button className="w-full btn-cta text-white py-4 rounded-2xl font-bold text-base flex items-center justify-center gap-2.5">
                     <MI name="chat" className="text-xl" />
                     Start Chatting with Merrell →
                   </button>
                 </Link>
-                <p className="text-center text-xs text-slate-600 mt-3">
-                  No sign-up · Anonymous · Fully functional AI assistant
+                <p className="text-center text-xs text-slate-500 mt-3">
+                  No sign-up, anonymous, fully functional AI assistant
                 </p>
               </div>
             </div>
@@ -958,58 +1276,59 @@ const Index = () => {
                 { icon: "bolt", text: "Real AI responses" },
                 { icon: "shopping_bag", text: "Actual product catalog" },
               ].map((t) => (
-                <span key={t.text} className="flex items-center gap-1.5 text-xs" style={{ color: "#8b9abf" }}>
-                  <MI name={t.icon} className="text-sm flex-shrink-0" style={{ color: "#4cd7f6" }} />
+                <span key={t.text} className="flex items-center gap-1.5 text-xs" style={{ color: "#667085" }}>
+                  <MI name={t.icon} className="text-sm flex-shrink-0" style={{ color: "#000047" }} />
                   {t.text}
                 </span>
               ))}
             </div>
+            </div>
           </div>
         </section>
 
-        <div className="divider max-w-[1320px] mx-auto" />
+        <div className="divider max-w-[1440px] mx-auto" />
 
         {/* ══ FAQ ══ */}
-        <section id="faq" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[900px] mx-auto">
+        <section id="faq" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
           <div className="text-center mb-10 sm:mb-14 reveal">
-            <span className="label text-[10px] mb-4 block" style={{ color: "#b4c5ff" }}>FAQ</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">AI customer care questions, answered</h2>
-            <p className="max-w-xl mx-auto text-base" style={{ color: "#8b9abf" }}>
+            <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>FAQ</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">AI customer care questions, answered</h2>
+            <p className="max-w-xl mx-auto text-base" style={{ color: "#667085" }}>
               Everything you need to know about running customer support and sales on OctaDezx.
             </p>
           </div>
           <div className="stagger grid sm:grid-cols-2 gap-4 sm:gap-5">
             {[
               { q: "What is OctaDezx?", a: "OctaDezx is an AI customer care platform that gives your business an always-on AI agent to answer customer questions, resolve support requests and capture orders 24/7 across WhatsApp, Instagram, Facebook, Shopify and more." },
-              { q: "Can OctaDezx replace a customer care agent?", a: "It works as a 24/7 AI customer service agent that instantly answers FAQs, handles product and order questions and resolves common support requests — then escalates to your human team with full context when a conversation needs a person." },
-              { q: "Which channels does the AI customer service agent cover?", a: "WhatsApp, Instagram, Facebook, Shopify and your website widget out of the box, plus 50+ integrations — all answered from one place in your customers' own language." },
+              { q: "Can OctaDezx replace a customer care agent?", a: "It works as a 24/7 AI customer service agent that instantly answers FAQs, handles product and order questions and resolves common support requests, then escalates to your human team with full context when a conversation needs a person." },
+              { q: "Which channels does the AI customer service agent cover?", a: "WhatsApp, Instagram, Facebook, Shopify and your website widget out of the box, plus 50+ integrations, all answered from one place in your customers' own language." },
               { q: "Does it take orders, not just answer questions?", a: "Yes. Beyond support, OctaDezx confirms and places orders for you. Every price and total is verified on our servers against your catalogue, so customers are always charged the correct amount." },
-              { q: "How fast can I go live?", a: "Under 10 minutes — paste a storefront URL to import your catalogue, add your policies and FAQs, connect a channel, and your AI customer care agent is live." },
-              { q: "Is there a free trial?", a: "Yes — a 24-hour free trial with full access to every feature. No credit card required." },
+              { q: "How fast can I go live?", a: "Under 10 minutes. Paste a storefront URL to import your catalogue, add your policies and FAQs, connect a channel, and your AI customer care agent is live." },
+              { q: "Is there a free trial?", a: "Yes, a 24-hour free trial with full access to every feature. No credit card required." },
             ].map((f) => (
               <div key={f.q} className="glass rounded-2xl p-6">
-                <h3 className="text-base font-bold text-white mb-2 tracking-tight">{f.q}</h3>
-                <p className="text-sm leading-relaxed" style={{ color: "#8b9abf" }}>{f.a}</p>
+                <h3 className="text-base font-bold text-slate-900 mb-2 tracking-tight">{f.q}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "#667085" }}>{f.a}</p>
               </div>
             ))}
           </div>
         </section>
 
-        <div className="divider max-w-[1320px] mx-auto" />
+        <div className="divider max-w-[1440px] mx-auto" />
 
         {/* ══ CTA ══ */}
         <section className="py-12 sm:py-20 md:py-28 relative overflow-hidden px-4 sm:px-6">
           <div className="max-w-[900px] mx-auto reveal-s">
             <div className="cta-card relative rounded-[2.5rem] p-8 sm:p-14 md:p-20 text-center overflow-hidden">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full opacity-20 pointer-events-none"
-                style={{ background: "radial-gradient(circle,#2563eb,transparent 65%)", filter: "blur(50px)" }} />
+                style={{ background: "radial-gradient(circle,#ffffff,transparent 65%)", filter: "blur(50px)" }} />
               <div className="absolute bottom-0 right-0 w-48 h-48 rounded-full opacity-10 pointer-events-none"
-                style={{ background: "radial-gradient(circle,#7c3aed,transparent 65%)", filter: "blur(40px)" }} />
+                style={{ background: "radial-gradient(circle,#ffffff,transparent 65%)", filter: "blur(40px)" }} />
               <div className="relative z-10">
-                <span className="label text-[10px] mb-5 block" style={{ color: "#4cd7f6" }}>Get Started Today</span>
+                <span className="label text-[10px] mb-5 block" style={{ color: "rgba(255,255,255,0.8)" }}>Get Started Today</span>
                 <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6 tracking-tight">Ready to automate?</h2>
-                <p className="mb-9 sm:mb-11 text-base sm:text-lg" style={{ color: "#8b9abf" }}>
-                  Put your customer care and sales on autopilot with OctaDezx — answer every
+                <p className="mb-9 sm:mb-11 text-base sm:text-lg" style={{ color: "rgba(255,255,255,0.88)" }}>
+                  Put your customer care and sales on autopilot with OctaDezx. Answer every
                   customer and capture every order, 24/7.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
@@ -1018,12 +1337,13 @@ const Index = () => {
                     onChange={(e) => setCtaEmail(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleCtaStart(); }}
                     aria-label="Work email"
-                    className="rounded-2xl px-5 py-4 w-full sm:w-80 text-white placeholder-slate-600 focus:outline-none focus:ring-2 border text-sm"
-                    style={{ background: "rgba(255,255,255,0.04)", borderColor: "rgba(255,255,255,0.1)", focusRingColor: "#4cd7f6" } as React.CSSProperties} />
-                  <button onClick={handleCtaStart} className="btn-cta px-9 py-4 rounded-2xl font-bold text-white w-full sm:w-auto sm:flex-shrink-0 text-sm">Start Now →</button>
+                    className="rounded-2xl px-5 py-4 w-full sm:w-80 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 border text-sm"
+                    style={{ background: "rgba(255,255,255,0.12)", borderColor: "rgba(255,255,255,0.25)" }} />
+                  <button onClick={handleCtaStart} className="px-9 py-4 rounded-2xl font-bold w-full sm:w-auto sm:flex-shrink-0 text-sm transition-transform hover:-translate-y-0.5"
+                    style={{ background: "#ffffff", color: "#000047" }}>Start Now →</button>
                 </div>
-                <p className="text-sm text-slate-600 mt-6 flex items-center justify-center gap-2">
-                  <MI name="lock" className="text-sm" /> Secure · GDPR compliant · Cancel anytime
+                <p className="text-sm mt-6 flex items-center justify-center gap-2" style={{ color: "rgba(255,255,255,0.75)" }}>
+                  <MI name="lock" className="text-sm" /> Secure, GDPR compliant, cancel anytime
                 </p>
               </div>
             </div>
@@ -1034,57 +1354,57 @@ const Index = () => {
 
       {/* ══ FOOTER ══ */}
       <footer id="contact" className="w-full py-14 px-4 sm:px-6 md:px-12 border-t"
-        style={{ background: "#06080f", borderColor: "rgba(255,255,255,0.05)" }}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 max-w-[1320px] mx-auto">
+        style={{ background: "#ebedf1", borderColor: "#e2e5ea" }}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 max-w-[1440px] mx-auto">
           <div className="col-span-2 md:col-span-1">
             <Link to="/" className="flex items-center gap-2.5 mb-5 group w-fit">
               <div className="relative">
-                <div className="absolute inset-0 rounded-lg blur-md opacity-30 group-hover:opacity-60 transition-opacity bg-blue-600" />
+                <div className="absolute inset-0 rounded-lg blur-md opacity-20 group-hover:opacity-40 transition-opacity bg-blue-600" />
                 <LogoIcon size="md" className="relative" />
               </div>
-              <span className="text-base font-bold tracking-[0.07em] uppercase text-white">OctaDezx</span>
+              <span className="text-base font-bold tracking-[0.07em] uppercase text-slate-900">OctaDezx</span>
             </Link>
-            <p className="text-slate-600 label text-[10px] leading-relaxed">
+            <p className="text-slate-500 label text-[10px] leading-relaxed">
               © {new Date().getFullYear()} OctaDezx.<br className="hidden sm:block" /> Making shop life easier.
             </p>
-            <p className="text-slate-700 label text-[9px] mt-2">Secure &amp; GDPR Compliant</p>
+            <p className="text-slate-400 label text-[9px] mt-2">Secure &amp; GDPR Compliant</p>
             <div className="flex items-center gap-2.5 mt-5">
               <a href="https://www.facebook.com/profile.php?id=61586165043647" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 hover:text-white hover:bg-blue-600/30 transition-all"
-                style={{ background: "rgba(255,255,255,0.03)" }}><FacebookSVG /></a>
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all"
+                style={{ background: "#ffffff", border: "1px solid #e8eaee" }}><FacebookSVG /></a>
               <a href="https://www.instagram.com/octadezx_" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 hover:text-pink-300 hover:bg-pink-600/20 transition-all"
-                style={{ background: "rgba(255,255,255,0.03)" }}><InstagramSVG /></a>
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-pink-600 hover:bg-pink-50 transition-all"
+                style={{ background: "#ffffff", border: "1px solid #e8eaee" }}><InstagramSVG /></a>
               <a href="mailto:kevin@octadezx.com" aria-label="Email"
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-600 hover:text-red-300 hover:bg-red-500/20 transition-all"
-                style={{ background: "rgba(255,255,255,0.03)" }}><MailSVG /></a>
+                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 transition-all"
+                style={{ background: "#ffffff", border: "1px solid #e8eaee" }}><MailSVG /></a>
             </div>
           </div>
 
           <div>
-            <h4 className="text-white text-xs font-bold mb-5 uppercase tracking-[0.14em]">Product</h4>
+            <h4 className="text-slate-900 text-xs font-bold mb-5 uppercase tracking-[0.14em]">Product</h4>
             <ul className="space-y-3.5">
               {[{label:"Core Features",href:"#features"},{label:"Integrations",href:"#integrations"},{label:"Pricing",href:"#pricing"}].map((l) => (
-                <li key={l.label}><a href={l.href} className="label text-[11px] text-slate-600 hover:text-slate-300 transition-colors">{l.label}</a></li>
+                <li key={l.label}><a href={l.href} className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">{l.label}</a></li>
               ))}
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white text-xs font-bold mb-5 uppercase tracking-[0.14em]">Community</h4>
+            <h4 className="text-slate-900 text-xs font-bold mb-5 uppercase tracking-[0.14em]">Community</h4>
             <ul className="space-y-3.5">
-              <li><a href="mailto:kevin@octadezx.com" className="label text-[11px] text-slate-600 hover:text-slate-300 transition-colors">Help Center</a></li>
-              <li><a href="#faq" className="label text-[11px] text-slate-600 hover:text-slate-300 transition-colors">FAQ</a></li>
+              <li><a href="mailto:kevin@octadezx.com" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">Help Center</a></li>
+              <li><a href="#faq" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">FAQ</a></li>
             </ul>
           </div>
 
           <div>
-            <h4 className="text-white text-xs font-bold mb-5 uppercase tracking-[0.14em]">Legal</h4>
+            <h4 className="text-slate-900 text-xs font-bold mb-5 uppercase tracking-[0.14em]">Legal</h4>
             <ul className="space-y-3.5">
-              <li><Link to="/privacy" className="label text-[11px] text-slate-600 hover:text-slate-300 transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/privacy" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">Privacy Policy</Link></li>
               {/* TODO: replace with dedicated /terms and /cookies pages once written; routed to privacy for now so links aren't dead */}
-              <li><Link to="/privacy" className="label text-[11px] text-slate-600 hover:text-slate-300 transition-colors">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="label text-[11px] text-slate-600 hover:text-slate-300 transition-colors">Cookie Policy</Link></li>
+              <li><Link to="/privacy" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">Terms of Service</Link></li>
+              <li><Link to="/privacy" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">Cookie Policy</Link></li>
             </ul>
           </div>
         </div>

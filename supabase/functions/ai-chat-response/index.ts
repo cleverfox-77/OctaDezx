@@ -4,6 +4,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { assertPublicUrl } from "../_shared/urlGuard.ts";
+import { buildEscalationEmail, getOwnerContact, sendOwnerEmail } from "../_shared/notify.ts";
 
 // ========================================
 // TYPE DEFINITIONS
@@ -41,7 +42,30 @@ interface Business {
   description: string | null;
   policies: string | null;
   ai_instructions: string | null;
+  business_type?: string | null;
+  type_config?: Record<string, unknown> | null;
   products?: Product[];
+}
+
+// How the AI talks about what each kind of business offers. Default keeps the
+// original e-commerce behaviour for existing businesses.
+const TYPE_PROFILES: Record<string, { role: string; catalogLabel: string; sells: boolean }> = {
+  ecommerce:  { role: "AI sales assistant for an online store",          catalogLabel: "PRODUCTS",          sells: true },
+  retail:     { role: "AI sales assistant for a retail store",           catalogLabel: "PRODUCTS",          sells: true },
+  restaurant: { role: "AI assistant for a restaurant / food business",   catalogLabel: "MENU ITEMS",        sells: true },
+  agency:     { role: "AI client-care assistant for a professional services agency", catalogLabel: "SERVICES", sells: false },
+  saas:       { role: "AI support assistant for a software (SaaS) company", catalogLabel: "PLANS & PRODUCTS", sells: false },
+  healthcare: { role: "AI front-desk assistant for a healthcare provider", catalogLabel: "SERVICES",        sells: false },
+  education:  { role: "AI admissions/support assistant for an education provider", catalogLabel: "PROGRAMS & COURSES", sells: false },
+  finance:    { role: "AI customer-care assistant for a financial services business", catalogLabel: "SERVICES", sells: false },
+  realestate: { role: "AI assistant for a real-estate business",         catalogLabel: "LISTINGS & SERVICES", sells: false },
+  travel:     { role: "AI booking/support assistant for a travel & hospitality business", catalogLabel: "PACKAGES & SERVICES", sells: false },
+  enterprise: { role: "AI customer-care assistant for an enterprise organisation", catalogLabel: "PRODUCTS & SERVICES", sells: false },
+  other:      { role: "AI customer-care assistant",                      catalogLabel: "PRODUCTS & SERVICES", sells: false },
+};
+
+function getTypeProfile(business: Business) {
+  return TYPE_PROFILES[business.business_type ?? "ecommerce"] ?? TYPE_PROFILES.ecommerce;
 }
 
 interface ChatMessage {
@@ -375,8 +399,9 @@ ${business.ai_instructions || 'Be helpful, professional, and customer-focused.'}
 
 `;
 
-  // === STEP 3: PRODUCTS CATALOG ===
-  prompt += `=== STEP 3: AVAILABLE PRODUCTS CATALOG ===\n`;
+  // === STEP 3: CATALOG (terminology adapts to the business type) ===
+  const typeProfile = getTypeProfile(business);
+  prompt += `=== STEP 3: AVAILABLE ${typeProfile.catalogLabel} ===\n`;
   const products = allProducts || business.products || [];
   if (products.length > 0) {
     products.forEach(p => {
@@ -388,7 +413,19 @@ ${business.ai_instructions || 'Be helpful, professional, and customer-focused.'}
       prompt += `\n`;
     });
   } else {
-    prompt += `No products currently listed.\n`;
+    prompt += `No ${typeProfile.catalogLabel.toLowerCase()} currently listed.\n`;
+  }
+
+  // === BUSINESS PROFILE (type-specific onboarding answers) ===
+  const typeConfig = business.type_config || {};
+  const typeEntries = Object.entries(typeConfig).filter(([, v]) => v && String(v).trim());
+  if (typeEntries.length > 0) {
+    prompt += `\n=== BUSINESS PROFILE (${(business.business_type || "ecommerce").toUpperCase()}) ===\n`;
+    prompt += `The business owner provided these details about how they operate. Use them when answering:\n`;
+    typeEntries.forEach(([key, value]) => {
+      const label = key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+      prompt += `- ${label}: ${String(value)}\n`;
+    });
   }
 
   // === STEP 4: KNOWLEDGE BASE (HIGHEST PRIORITY - FOLLOW THESE INSTRUCTIONS) ===
@@ -427,7 +464,7 @@ ${business.ai_instructions || 'Be helpful, professional, and customer-focused.'}
   // === ROLE & BEHAVIOR ===
   prompt += `
 === YOUR ROLE ===
-You are the AI sales assistant for **${business.name}**.
+You are the ${typeProfile.role} **${business.name}**.
 ${business.description ? `Business: ${business.description}` : ''}
 
 === CRITICAL RULES - YOU MUST FOLLOW THESE (IN ORDER OF PRIORITY) ===
@@ -444,7 +481,7 @@ ${business.description ? `Business: ${business.description}` : ''}
 🥉 **#3 OTHER RULES**:
    - ONLY answer using information from policies, products, and knowledge base
    - NEVER make up products, prices, policies, or information
-   - If asked about something NOT in your data, say: "I don't have specific information about that. Let me connect you with our team for more details."
+   - If asked about something NOT in your data, say: "I don't have specific information about that. Let me connect you with our team for more details." AND escalate using the ||ESCALATE:...|| marker described below
    - If asked about products you don't have, suggest similar products you DO have
    - Be the BEST salesman - persuasive, enthusiastic, helpful but not pushy
    - Use the customer's language (Bengali → Bengali, Hindi → Hindi, etc.)
@@ -510,6 +547,39 @@ When the customer confirms AND you have collected all required info from the kno
 - The marker must be at the VERY END of your message
 - Use the exact product name and price from the catalog
 - Default quantity is 1 unless customer specifies otherwise`;
+
+  if (!typeProfile.sells) {
+    prompt += `
+
+=== LEAD & REQUEST CAPTURE (service business) ===
+This business primarily offers services rather than checkout-style orders. When a
+customer wants to hire, book, enrol, or get a quote:
+1. Collect their name, contact details (email/phone) and a short summary of what they need
+2. Confirm the details back to them
+3. Then HAND OFF to the human team using the escalation marker below with reason
+   "New lead: <one-line summary>" so the owner is notified immediately
+Do NOT invent prices, availability, or appointment slots that are not in your data.`;
+  }
+
+  prompt += `
+
+=== HUMAN ESCALATION (IMPORTANT) ===
+Escalate the conversation to a human when ANY of these happen:
+- You cannot answer the question from the business data, policies, ${typeProfile.catalogLabel.toLowerCase()}, or knowledge base above
+- The customer explicitly asks for a human, agent, manager, or "real person"
+- The request needs an action you cannot perform (refunds, cancellations, account changes, complaints, legal/medical/financial advice)
+- The customer is clearly angry or has repeated the same unresolved issue multiple times
+
+**HOW TO ESCALATE:**
+1. Write a short, warm handoff message in the CUSTOMER'S language, e.g.
+   "I've passed this to our team — a human teammate will reply here shortly."
+2. Append this HIDDEN marker at the VERY END of your message (single line, valid JSON, English reason):
+||ESCALATE:{"reason":"short reason here"}||
+
+**ESCALATION RULES:**
+- Do NOT escalate greetings, small talk, or questions you CAN answer from your data
+- NEVER mention the marker or the word "escalate" to the customer
+- After the marker is sent, a human takes over this conversation`;
 
   return prompt.trim();
 }
@@ -885,6 +955,8 @@ Deno.serve(async (req: Request) => {
         description,
         policies,
         ai_instructions,
+        business_type,
+        type_config,
         products (
           id,
           name,
@@ -945,12 +1017,69 @@ Deno.serve(async (req: Request) => {
     if (intent.isClarification && intent.emotionalState === "frustrated" && !response.toLowerCase().includes("apolog")) {
       response = "My apologies! " + response;
     }
-    
+
+    // === ESCALATION HANDLING ===
+    // The AI appends ||ESCALATE:{"reason":"..."}|| when it can't help. We strip
+    // the marker, flag the session for the dashboard's Escalated Chats section,
+    // and notify the business owner by email (login address).
+    let escalated = false;
+    const escalateMatch = response.match(/\|\|ESCALATE:(.*?)\|\|/s);
+    if (escalateMatch) {
+      response = response.replace(escalateMatch[0], "").trim();
+      let reason = "AI could not resolve the customer's request";
+      try {
+        const parsed = JSON.parse(escalateMatch[1]);
+        if (typeof parsed?.reason === "string" && parsed.reason.trim()) {
+          reason = parsed.reason.trim().slice(0, 300);
+        }
+      } catch { /* keep default reason */ }
+
+      // Only transition active sessions; never bounce an already-handled chat.
+      if (session?.status === "active") {
+        escalated = true;
+        const { error: escErr } = await supabase
+          .from("chat_sessions")
+          .update({ status: "escalated", escalation_reason: reason })
+          .eq("id", sessionId)
+          .eq("status", "active");
+
+        if (escErr) {
+          console.error("⚠️ Failed to mark session escalated:", escErr);
+          escalated = false;
+        } else {
+          console.log(`🚨 Session ${sessionId} escalated: ${reason}`);
+          // Owner notification — best-effort, never blocks the customer reply.
+          try {
+            const { data: sessionInfo } = await supabase
+              .from("chat_sessions")
+              .select("customer_name, customer_email")
+              .eq("id", sessionId)
+              .single();
+            const { email: ownerEmail, businessName } = await getOwnerContact(supabase, businessId);
+            if (ownerEmail) {
+              const mail = buildEscalationEmail({
+                businessName: businessName || business.name,
+                customerName: sessionInfo?.customer_name ?? null,
+                customerEmail: sessionInfo?.customer_email ?? null,
+                reason,
+                lastMessage: cleanMessage(message),
+              });
+              await sendOwnerEmail(supabase, { to: ownerEmail, subject: mail.subject, html: mail.html });
+            } else {
+              console.warn("⚠️ No owner email found for escalation notification");
+            }
+          } catch (mailErr) {
+            console.error("⚠️ Escalation email failed:", mailErr);
+          }
+        }
+      }
+    }
+
     console.log("✅ Response ready");
     console.log("====================================\n");
-    
+
     return new Response(
-      JSON.stringify({ response, escalated: false }),
+      JSON.stringify({ response, escalated }),
       { headers: { ...cors, "Content-Type": "application/json" } }
     );
     

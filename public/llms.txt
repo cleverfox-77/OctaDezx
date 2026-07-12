@@ -1,0 +1,39 @@
+# OctaDezx
+
+> OctaDezx is an AI customer care platform for e-commerce and service businesses. It gives a business an always-on AI agent that answers customer questions, resolves support requests and captures orders 24/7 across WhatsApp, Instagram, Facebook, Shopify and a website chat widget — in 50+ languages.
+
+OctaDezx is built for small and mid-size businesses that cannot staff round-the-clock support. The AI is trained on the business's own catalogue, policies, FAQs and tone of voice, answers only from that real information, and escalates to a human with full conversation context when needed. Every order price and total is verified server-side against the business's catalogue before confirmation, so customers are always charged the correct amount.
+
+## Key facts
+
+- Product type: AI customer service / customer care agent (SaaS, web-based)
+- Channels: WhatsApp, Instagram, Facebook, Shopify, website chat widget; 50+ integrations
+- Languages: 50+, auto-detected per customer
+- Setup time: under 10 minutes — paste a storefront URL to import a product catalogue (works with Shopify, WooCommerce, Wix and any public catalogue), add policies/FAQs, connect a channel
+- Order handling: the AI confirms and places orders; prices are verified server-side
+- Escalation: conversations that need a human are handed off with full context
+- Analytics: resolution rate, response time, orders, revenue and CSAT in a live dashboard
+- Security: end-to-end encryption, role-based access, GDPR-ready
+- Uptime: 99.9% SLA
+
+## Pricing (USD, monthly)
+
+- Free trial: 24 hours, full access, no credit card required
+- Starter: $9/month — 300 unique customers/day, essential automation, core integrations, email support
+- Pro Business: $29/month — 1,000 unique customers/day, whitelabel branding, priority processing, advanced analytics
+- Enterprise: $99/month — unlimited daily customers, 100,000 messages/month, dedicated success manager, priority SLA
+
+## Links
+
+- [Homepage](https://octadezx.com/): product overview, live demo chat, pricing and FAQ
+- [Live demo](https://octadezx.com/chat/a9a0d41a-6651-4d59-9e66-a8b15ba068f1): chat with a real OctaDezx-powered store assistant, no account needed
+- [Sign up](https://octadezx.com/auth): start the 24-hour free trial
+- [Privacy policy](https://octadezx.com/privacy)
+- Contact: kevin@octadezx.com
+
+## Common questions
+
+- What is OctaDezx? An AI customer care platform that gives businesses an always-on AI agent for support and sales across messaging channels.
+- Can it replace a human agent? It resolves routine support and product questions instantly, 24/7, and escalates complex conversations to the human team with full context.
+- Does it take orders? Yes — it confirms and places orders with server-verified pricing, not just answers questions.
+- How fast can a business go live? Under 10 minutes, no developers required.

@@ -12,6 +12,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
+import { buildOrderEmail, getOwnerContact, sendOwnerEmail } from "../_shared/notify.ts";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -148,6 +149,27 @@ Deno.serve(async (req: Request) => {
     if (insErr || !order) {
       console.error("Order insert failed:", insErr);
       return json({ error: "Could not create order" }, 500);
+    }
+
+    // Notify the business owner (login email) about the confirmed order.
+    // Best-effort: a mail failure must never fail the order itself.
+    try {
+      const { email: ownerEmail, businessName } = await getOwnerContact(supabase, businessId);
+      if (ownerEmail) {
+        const mail = buildOrderEmail({
+          businessName,
+          orderId: order.id,
+          items: resolved,
+          total,
+          customerName: safeName,
+          customerEmail: safeEmail,
+        });
+        await sendOwnerEmail(supabase, { to: ownerEmail, subject: mail.subject, html: mail.html });
+      } else {
+        console.warn("No owner email found for order notification");
+      }
+    } catch (mailErr) {
+      console.error("Order notification email failed:", mailErr);
     }
 
     return json({ order, unmatched });

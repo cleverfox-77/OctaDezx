@@ -338,6 +338,16 @@ deno_version = 2
 # [edge_runtime.secrets]
 # secret_key = "env(SECRET_VALUE)"
 
+# ── Public, API-key-authenticated functions ─────────────────────────────────
+# These authenticate callers with an OctaDezx API key (odx_...) instead of a
+# Supabase user JWT, so the gateway must NOT require a JWT. (Both validate the
+# key themselves via SHA-256 hash lookup.)
+[functions.api-v1]
+verify_jwt = false
+
+[functions.mcp]
+verify_jwt = false
+
 [analytics]
 enabled = true
 port = 54327

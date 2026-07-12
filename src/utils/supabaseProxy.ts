@@ -59,17 +59,26 @@ export function shouldUseDirectClient() {
 export async function directSupabaseRequest(method: string, path: string, body?: any) {
   // Use local proxy instead of direct Supabase URL
   const url = `${PROXY_BASE_URL}${path}`;
-  
+
   // Ensure we have credentials
   if (!SUPABASE_ANON_KEY) {
     console.error('❌ SUPABASE_ANON_KEY is missing!');
     return { data: null, error: { message: 'Configuration error: Missing API key' } };
   }
-  
+
+  // Authenticate as the signed-in (incl. anonymous) user when possible so RLS
+  // policies scoped to auth.uid() apply — e.g. guests reading/writing only
+  // THEIR chat session. Falls back to the bare anon key pre-sign-in.
+  let accessToken = SUPABASE_ANON_KEY;
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) accessToken = session.access_token;
+  } catch { /* fall back to anon key */ }
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     'apikey': SUPABASE_ANON_KEY,
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+    'Authorization': `Bearer ${accessToken}`,
   };
 
   const options: RequestInit = {

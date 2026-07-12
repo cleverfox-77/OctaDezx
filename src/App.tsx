@@ -11,6 +11,7 @@ import AuthRedirectHandler from "@/components/AuthRedirectHandler";
 import SubscriptionGuard from "@/components/SubscriptionGuard";
 import AuthCallback from "@/components/AuthCallback";
 import { useReferralCapture } from "@/hooks/useReferralCapture";
+import { LogoIcon } from "@/components/ui/Logo";
 
 // ── Landing page is the only page that loads eagerly (most visitors land here) ──
 import Index from "./pages/Index";
@@ -19,6 +20,7 @@ import Index from "./pages/Index";
 // This means landing-page visitors don't download Dashboard, AdminDashboard,
 // CustomerChat, etc. (~70% reduction in initial JS).
 const Auth                   = lazy(() => import("./pages/Auth"));
+const Authorize              = lazy(() => import("./pages/Authorize"));
 const Dashboard              = lazy(() => import("./pages/Dashboard"));
 const CustomerChat           = lazy(() => import("./pages/CustomerChat"));
 const NotFound               = lazy(() => import("./pages/NotFound"));
@@ -36,12 +38,16 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
-// Minimal loader shown while a lazy chunk is downloading
+// Branded loader shown while a lazy chunk is downloading — same visual
+// language as the landing preloader so route changes feel intentional.
 const PageLoader = () => (
   <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="flex flex-col items-center gap-3">
-      <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      <p className="text-sm text-muted-foreground">Loading…</p>
+    <div className="flex flex-col items-center gap-4 animate-fade-in">
+      <div className="relative">
+        <LogoIcon size="xl" />
+        <div className="absolute -inset-2 rounded-2xl border-2 border-primary/20 border-t-primary animate-spin" style={{ animationDuration: "0.9s" }} />
+      </div>
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">OctaDezx</p>
     </div>
   </div>
 );
@@ -58,6 +64,8 @@ const AppRoutes = () => {
 
           {/* Lazy-loaded routes */}
           <Route path="/auth" element={<Auth />} />
+          {/* MCP OAuth consent screen (handles its own auth → /auth and back) */}
+          <Route path="/authorize" element={<Authorize />} />
           <Route path="/dashboard" element={
             <ProtectedRoute>
               <SubscriptionGuard>

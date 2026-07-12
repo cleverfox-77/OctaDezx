@@ -424,6 +424,58 @@ html {
 .octa-landing .bg-surface-container-highest{ background-color: var(--octa-surface-highest); }
 .octa-landing .text-on-surface-variant     { color: var(--octa-muted); }
 
+/* ==========================================================
+   Dashboard polish — section transitions, sidebar, tactility
+   ========================================================== */
+
+/* Section mount transition (keyed on active section) */
+@keyframes sectionEnter {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: none; }
+}
+.section-enter { animation: sectionEnter 0.32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+/* Sidebar nav item */
+.side-item {
+  position: relative;
+  transition: background-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+.side-item:hover { transform: translateX(2px); }
+.side-item:active { transform: scale(0.985); }
+.side-item::before {
+  content: '';
+  position: absolute;
+  left: -12px; top: 50%;
+  height: 0; width: 3px;
+  border-radius: 999px;
+  background: hsl(var(--primary));
+  transform: translateY(-50%);
+  transition: height 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.side-item.active::before { height: 62%; }
+
+/* Universal press feedback for buttons in the app shell */
+.press:active { transform: scale(0.97); }
+
+/* Keyboard-visible focus ring, consistent everywhere */
+:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Header glass */
+.header-glass {
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  background: hsl(var(--card) / 0.82);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .section-enter { animation: none; }
+  .side-item, .side-item::before, .press { transition: none; }
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 10px;

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -7,17 +7,19 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
-  LogOut, MessageSquare, Users, Settings, BookOpen, BarChart2,
-  User as UserIcon, Copy, PlayCircle, ShoppingBag, CreditCard,
-  ExternalLink, Plug, Menu, ChevronRight, Building2, X,
-  Truck, FileText, ReceiptText,
+  LogOut, User as UserIcon, CreditCard,
+  ExternalLink, Menu, ChevronRight, Building2, X, Search,
 } from "lucide-react";
+import {
+  CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
+} from "@/components/ui/command";
 import { LogoIcon } from "@/components/ui/Logo";
 import { useToast } from "@/components/ui/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 import { DailyUsage } from "@/components/DailyUsage";
 import BusinessSetup from "@/components/BusinessSetup";
+import DashboardOverview from "@/components/DashboardOverview";
 import ProductCatalogWithScraper from "@/components/ProductCatalogWithScraper";
 import ChatSessions from "@/components/ChatSessions";
 import KnowledgeBase from "./KnowledgeBase";
@@ -25,19 +27,21 @@ import Analytics from "./Analytics";
 import UserProfile from "@/components/UserProfile";
 import BusinessSettings from "@/components/BusinessSettings";
 import Orders from "@/components/Orders";
+import ApiKeys from "@/components/ApiKeys";
 import PlatformIntegrations from "@/components/PlatformIntegrations";
 import Shipments from "@/components/Shipments";
 import Invoices from "@/components/Invoices";
 import InvoiceSettings from "@/components/InvoiceSettings";
+import AiTraining from "@/components/AiTraining";
+import McpConnect from "@/components/McpConnect";
 import { VideoPlayer } from "@/components/VideoPlayer";
+import { navForType, sectionLabel, type SectionId } from "@/lib/businessTypes";
 import { type Database } from "@/integrations/supabase/types";
 
 type Business = Database["public"]["Tables"]["businesses"]["Row"];
-type SectionId =
-  | "profile" | "billing"
-  | "overview" | "analytics" | "products" | "chats"
-  | "orders" | "shipments" | "invoices" | "invoice-settings"
-  | "integrations" | "knowledge-base" | "tutorial";
+// Account sections live outside the per-type business nav.
+type AccountSectionId = "profile" | "billing";
+type ActiveSection = AccountSectionId | SectionId;
 
 // ── Plan metadata ─────────────────────────────────────────────────
 const PLAN_BADGES: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
@@ -61,40 +65,74 @@ const PLAN_PRICES: Record<string, string> = {
 const MANAGE_PORTAL_URL = "https://octadezx.lemonsqueezy.com/billing";
 
 // ── Navigation definition ─────────────────────────────────────────
-const ACCOUNT_NAV: { id: SectionId; label: string; icon: React.ElementType }[] = [
+// The business-tools nav is built per business type (navForType) so a
+// restaurant never sees "Shipments" and an agency never sees "Invoices".
+const ACCOUNT_NAV: { id: AccountSectionId; label: string; icon: React.ElementType }[] = [
   { id: "profile", label: "Profile", icon: UserIcon },
   { id: "billing", label: "Billing", icon: CreditCard },
-];
-
-const BUSINESS_NAV: { id: SectionId; label: string; icon: React.ElementType; isNew?: boolean }[] = [
-  { id: "overview", label: "Overview", icon: MessageSquare },
-  { id: "analytics", label: "Analytics", icon: BarChart2 },
-  { id: "products", label: "Products", icon: Settings },
-  { id: "chats", label: "Chat Sessions", icon: Users },
-  { id: "orders", label: "Orders", icon: ShoppingBag },
-  { id: "shipments", label: "Shipments", icon: Truck, isNew: true },
-  { id: "invoices", label: "Invoices", icon: FileText, isNew: true },
-  { id: "invoice-settings", label: "Invoice Settings", icon: ReceiptText },
-  { id: "integrations", label: "Integrations", icon: Plug },
-  { id: "knowledge-base", label: "Knowledge Base", icon: BookOpen },
-  { id: "tutorial", label: "Tutorial", icon: PlayCircle },
 ];
 
 // ── Main component ────────────────────────────────────────────────
 const Dashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
-  const { status: subscriptionStatus, planType, trialEndsAt, isTrialExpired, loading: subLoading } = useSubscription();
+  const { status: subscriptionStatus, planType, trialEndsAt, isTrialExpired, loading: subLoading, checkAccess } = useSubscription();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeSection, setActiveSection] = useState<SectionId>("overview");
+  const [activeSection, setActiveSection] = useState<ActiveSection>("overview");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [escalatedCount, setEscalatedCount] = useState(0);
+  const [cmdOpen, setCmdOpen] = useState(false);
+
+  // ⌘K / Ctrl+K command palette
+  useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setCmdOpen((open) => !open);
+      }
+    };
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
+
+  // Business-tools nav, tailored to the selected business's type.
+  const businessNav = useMemo(
+    () => navForType(selectedBusiness?.business_type),
+    [selectedBusiness?.business_type],
+  );
+
+  // If the active business section doesn't exist for the newly selected type
+  // (e.g. switching from an e-commerce store to an agency that has no Shipments),
+  // fall back to Overview so the user never lands on a blank panel.
+  useEffect(() => {
+    const isAccount = activeSection === "profile" || activeSection === "billing";
+    if (!isAccount && selectedBusiness && !businessNav.some((n) => n.id === activeSection)) {
+      setActiveSection("overview");
+    }
+  }, [businessNav, activeSection, selectedBusiness]);
 
   useEffect(() => {
     if (user?.id) loadBusinesses();
     else setLoading(false);
   }, [user]);
+
+  // Badge on the "Escalated Chats" nav item so handed-off customers aren't missed.
+  useEffect(() => {
+    if (!selectedBusiness?.id) { setEscalatedCount(0); return; }
+    const fetchCount = async () => {
+      const { count } = await supabase
+        .from("chat_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("business_id", selectedBusiness.id)
+        .eq("status", "escalated");
+      setEscalatedCount(count ?? 0);
+    };
+    fetchCount();
+    const interval = setInterval(fetchCount, 60_000);
+    return () => clearInterval(interval);
+  }, [selectedBusiness?.id, activeSection]);
 
   const loadBusinesses = async () => {
     if (!user?.id) { setLoading(false); return; }
@@ -104,7 +142,15 @@ const Dashboard = () => {
       if (error) throw error;
       const businessData = (data as Business[]) || [];
       setBusinesses(businessData);
-      if (businessData.length > 0) setSelectedBusiness(businessData[0]);
+      if (businessData.length > 0) {
+        const first = businessData[0];
+        setSelectedBusiness(first);
+        // Drop freshly-onboarded (untrained) businesses straight into Train AI —
+        // that's where they add the info the assistant answers from.
+        const cfg = (first.type_config && typeof first.type_config === "object" ? first.type_config : {}) as Record<string, unknown>;
+        const untrained = !first.policies?.trim() && !first.description?.trim() && Object.keys(cfg).length === 0;
+        if (untrained) setActiveSection("train");
+      }
     } catch {
       toast({ title: "Error", description: "Failed to load businesses", variant: "destructive" });
     } finally {
@@ -118,13 +164,6 @@ const Dashboard = () => {
   };
 
   const generateChatLink = (businessId: string) => `${window.location.origin}/chat/${businessId}`;
-
-  const handleCopyLink = (link: string) => {
-    navigator.clipboard.writeText(link).then(
-      () => toast({ title: "Copied!", description: "Chat link copied to clipboard." }),
-      () => toast({ title: "Error", description: "Failed to copy link.", variant: "destructive" })
-    );
-  };
 
   const handleSettingsUpdated = (updatedBusiness: Business) => {
     setSelectedBusiness(updatedBusiness);
@@ -149,13 +188,13 @@ const Dashboard = () => {
   };
 
   // Navigate and close mobile menu
-  const navigate = (section: SectionId) => {
+  const navigate = (section: ActiveSection) => {
     setActiveSection(section);
     setMobileMenuOpen(false);
   };
 
-  const isBusinessSection = BUSINESS_NAV.some(n => n.id === activeSection);
-  const currentNavItem = [...ACCOUNT_NAV, ...BUSINESS_NAV].find(n => n.id === activeSection);
+  const isBusinessSection = businessNav.some(n => n.id === activeSection);
+  const currentNavItem = [...ACCOUNT_NAV, ...businessNav].find(n => n.id === activeSection);
 
   // ── Loading skeleton ───────────────────────────────────────────
   if (loading || subLoading) {
@@ -201,9 +240,9 @@ const Dashboard = () => {
               <button
                 key={biz.id}
                 onClick={() => { setSelectedBusiness(biz); if (isBusinessSection) setMobileMenuOpen(false); }}
-                className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors text-left ${
+                className={`side-item w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-left ${
                   selectedBusiness?.id === biz.id
-                    ? "bg-primary text-primary-foreground"
+                    ? "active bg-primary text-primary-foreground shadow-sm"
                     : "hover:bg-muted text-foreground"
                 }`}
               >
@@ -223,9 +262,9 @@ const Dashboard = () => {
             <button
               key={id}
               onClick={() => navigate(id)}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+              className={`side-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
                 activeSection === id
-                  ? "bg-primary text-primary-foreground font-medium"
+                  ? "active bg-primary text-primary-foreground font-medium shadow-sm"
                   : "hover:bg-muted text-foreground"
               }`}
             >
@@ -242,24 +281,29 @@ const Dashboard = () => {
         <div className="flex-1">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-2">Business Tools</p>
           <div className="space-y-0.5">
-            {BUSINESS_NAV.map(({ id, label, icon: Icon, isNew }) => (
+            {businessNav.map(({ id, label, icon: Icon, isNew }) => (
               <button
                 key={id}
                 onClick={() => navigate(id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                className={`side-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm ${
                   activeSection === id
-                    ? "bg-primary text-primary-foreground font-medium"
+                    ? "active bg-primary text-primary-foreground font-medium shadow-sm"
                     : "hover:bg-muted text-foreground"
                 }`}
               >
                 <Icon className="h-4 w-4 flex-shrink-0" />
                 <span>{label}</span>
-                {isNew && (
+                {id === "escalated" && escalatedCount > 0 ? (
+                  <span className="ml-auto bg-destructive text-destructive-foreground text-[10px] font-bold px-1.5 py-0.5 rounded-full leading-none min-w-[18px] text-center">
+                    {escalatedCount}
+                  </span>
+                ) : isNew ? (
                   <span className="ml-auto bg-primary/20 text-primary text-[9px] font-bold px-1.5 py-0.5 rounded-full leading-none border border-primary/30">
                     NEW
                   </span>
+                ) : (
+                  activeSection === id && <ChevronRight className="h-3.5 w-3.5 ml-auto" />
                 )}
-                {activeSection === id && !isNew && <ChevronRight className="h-3.5 w-3.5 ml-auto" />}
               </button>
             ))}
           </div>
@@ -349,30 +393,35 @@ const Dashboard = () => {
 
     switch (activeSection) {
       case "overview": return (
-        <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Chat Link</CardTitle>
-              <CardDescription>Share this link with your customers</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2">
-                <div className="bg-muted p-3 rounded-md overflow-x-auto flex-grow">
-                  <code className="text-sm whitespace-nowrap">{generateChatLink(selectedBusiness.id)}</code>
-                </div>
-                <Button variant="outline" size="icon" onClick={() => handleCopyLink(generateChatLink(selectedBusiness.id))}>
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">Add this to your auto-reply messages or share it on social media</p>
-            </CardContent>
-          </Card>
+        <div className="space-y-6">
+          <DashboardOverview
+            business={selectedBusiness}
+            chatLink={generateChatLink(selectedBusiness.id)}
+            onNavigate={navigate}
+          />
           <BusinessSettings business={selectedBusiness} onSettingsUpdated={handleSettingsUpdated} />
         </div>
+      );
+      case "train": return (
+        <AiTraining
+          business={selectedBusiness}
+          onSaved={handleSettingsUpdated}
+          onNavigate={navigate}
+          productsLabel={sectionLabel(selectedBusiness.business_type, "products")}
+        />
+      );
+      case "claude-mcp": return (
+        <McpConnect
+          businessId={selectedBusiness.id}
+          subscribed={checkAccess()}
+          onUpgrade={() => navigate("billing")}
+        />
       );
       case "analytics": return <Analytics businessId={selectedBusiness.id} />;
       case "products": return <ProductCatalogWithScraper businessId={selectedBusiness.id} />;
       case "chats": return <ChatSessions businessId={selectedBusiness.id} />;
+      case "escalated": return <ChatSessions businessId={selectedBusiness.id} filter="escalated" />;
+      case "api-keys": return <ApiKeys businessId={selectedBusiness.id} />;
       case "orders": return <Orders businessId={selectedBusiness.id} />;
       case "shipments": return <Shipments businessId={selectedBusiness.id} />;
       case "invoices": return <Invoices businessId={selectedBusiness.id} />;
@@ -429,8 +478,12 @@ const Dashboard = () => {
             </Button>
           </div>
         </header>
-        <div className="container mx-auto px-4 py-8">
-          <BusinessSetup onBusinessCreated={loadBusinesses} />
+        <div className="relative">
+          <div className="absolute inset-0 bg-grid-subtle opacity-40 pointer-events-none"
+            style={{ maskImage: "linear-gradient(to bottom, #000, transparent 80%)", WebkitMaskImage: "linear-gradient(to bottom, #000, transparent 80%)" }} />
+          <div className="relative container mx-auto px-4 py-10 sm:py-14">
+            <BusinessSetup onBusinessCreated={loadBusinesses} />
+          </div>
         </div>
       </div>
     );
@@ -441,7 +494,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background flex flex-col">
 
       {/* ── HEADER ── */}
-      <header className="border-b bg-card sticky top-0 z-30">
+      <header className="border-b header-glass sticky top-0 z-30">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between gap-3">
 
           {/* Left: Logo + business name */}
@@ -451,7 +504,9 @@ const Dashboard = () => {
               <h1 className="text-base font-bold leading-tight truncate">
                 {selectedBusiness?.name || "OctaDezx"}
               </h1>
-              <p className="text-xs text-muted-foreground leading-tight">Dashboard</p>
+              <p className="text-xs text-muted-foreground leading-tight">
+                Dashboard{currentNavItem ? ` · ${currentNavItem.label}` : ""}
+              </p>
             </div>
             <h1 className="text-base font-bold sm:hidden truncate max-w-[140px]">
               {selectedBusiness?.name || "OctaDezx"}
@@ -467,15 +522,26 @@ const Dashboard = () => {
 
           {/* Right: desktop actions + mobile hamburger */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Desktop: email + plan badge + sign out */}
+            {/* Desktop: search + email + plan badge + sign out */}
             <div className="hidden sm:flex items-center gap-3">
+              <button
+                onClick={() => setCmdOpen(true)}
+                className="press flex items-center gap-2 rounded-lg border bg-background/60 px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground hover:border-primary/40 transition-colors"
+                aria-label="Open command palette"
+              >
+                <Search className="h-3.5 w-3.5" />
+                <span className="hidden lg:inline">Jump to…</span>
+                <kbd className="pointer-events-none hidden lg:inline-flex h-5 select-none items-center gap-0.5 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium">
+                  Ctrl K
+                </kbd>
+              </button>
               <span className="text-sm text-muted-foreground hidden md:inline truncate max-w-[200px]">{user?.email}</span>
               {planType && PLAN_BADGES[planType] && (
                 <Badge variant={PLAN_BADGES[planType].variant} className="text-xs">
                   {PLAN_BADGES[planType].label}
                 </Badge>
               )}
-              <Button variant="outline" size="sm" onClick={handleSignOut}>
+              <Button variant="outline" size="sm" onClick={handleSignOut} className="press">
                 <LogOut className="h-4 w-4 mr-2" />Sign Out
               </Button>
             </div>
@@ -484,7 +550,7 @@ const Dashboard = () => {
             <Button
               variant="outline"
               size="icon"
-              className="sm:hidden"
+              className="sm:hidden press"
               onClick={() => setMobileMenuOpen(true)}
             >
               <Menu className="h-5 w-5" />
@@ -492,6 +558,47 @@ const Dashboard = () => {
           </div>
         </div>
       </header>
+
+      {/* ── COMMAND PALETTE (⌘K) ── */}
+      <CommandDialog open={cmdOpen} onOpenChange={setCmdOpen}>
+        <CommandInput placeholder="Jump to a section…" />
+        <CommandList>
+          <CommandEmpty>No results found.</CommandEmpty>
+          {selectedBusiness && (
+            <CommandGroup heading="Business Tools">
+              {businessNav.map(({ id, label, icon: Icon }) => (
+                <CommandItem
+                  key={id}
+                  value={label}
+                  onSelect={() => { navigate(id); setCmdOpen(false); }}
+                >
+                  <Icon className="mr-2 h-4 w-4" />
+                  {label}
+                  {id === "escalated" && escalatedCount > 0 && (
+                    <Badge variant="destructive" className="ml-auto text-[10px]">{escalatedCount}</Badge>
+                  )}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+          <CommandGroup heading="Account">
+            {ACCOUNT_NAV.map(({ id, label, icon: Icon }) => (
+              <CommandItem
+                key={id}
+                value={label}
+                onSelect={() => { navigate(id); setCmdOpen(false); }}
+              >
+                <Icon className="mr-2 h-4 w-4" />
+                {label}
+              </CommandItem>
+            ))}
+            <CommandItem value="Sign out" onSelect={() => { setCmdOpen(false); handleSignOut(); }}>
+              <LogOut className="mr-2 h-4 w-4" />
+              Sign Out
+            </CommandItem>
+          </CommandGroup>
+        </CommandList>
+      </CommandDialog>
 
       {/* ── MOBILE SHEET MENU ── */}
       <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
@@ -525,7 +632,9 @@ const Dashboard = () => {
 
         {/* ── MAIN CONTENT ── */}
         <main className="flex-1 overflow-y-auto">
-          <div className="container max-w-5xl mx-auto px-4 py-6">
+          {/* key remounts the wrapper per section so every switch gets the
+              same brief enter transition — navigation feels acknowledged */}
+          <div key={activeSection} className="section-enter container max-w-5xl mx-auto px-4 py-6">
             {/* Page title on desktop */}
             <div className="hidden sm:flex items-center gap-2 mb-6">
               {currentNavItem && (

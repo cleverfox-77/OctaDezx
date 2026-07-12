@@ -12,16 +12,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { SEO } from "@/components/SEO";
 
 // --- TYPES ---
-interface ProductImage { image_url: string; }
-interface Product { name: string; description: string | null; price: number | null; category: string | null; metadata: any; product_images: ProductImage[]; }
-interface KBArticle { title: string; content: string | null; }
+// Shape returned by the get_public_business RPC (public widget bootstrap).
 interface Business {
   id: string; name: string; description: string;
-  policies?: string; ai_instructions?: string;
+  business_type?: string;
   invoice_enabled?: boolean;
   invoice_auto_generate?: boolean;
-  has_courier?: boolean; // populated after loading platform_integrations
-  products?: Product[]; kb_articles?: KBArticle[];
+  has_courier?: boolean; // computed server-side from platform_integrations
 }
 interface Message { id: string; sender_type: 'customer' | 'ai' | 'human'; content: string; image_url?: string; created_at: string; }
 
@@ -282,37 +279,14 @@ const CustomerChat = () => {
   };
 
   // ---- LOAD BUSINESS ----
+  // Capability-scoped bootstrap: get_public_business returns only the public
+  // fields the widget needs (incl. the server-computed courier check), so the
+  // businesses table needs no blanket public-read policy. The AI prompt is
+  // built server-side, so products/policies/knowledge base never load here.
   const loadBusinessData = async () => {
-    const result = await directSupabaseRequest('GET', `/rest/v1/businesses?id=eq.${businessId}&select=id,name,description,policies,ai_instructions,invoice_enabled,invoice_auto_generate`);
-    if (result.data?.[0]) {
-      const businessData = result.data[0] as Business;
-      const prodResult = await directSupabaseRequest('GET', `/rest/v1/products?business_id=eq.${businessId}&select=name,description,price,category,metadata,product_images(image_url)`);
-      if (prodResult.data) businessData.products = prodResult.data as Product[];
-      const kbResult = await directSupabaseRequest('GET', `/rest/v1/knowledge_base_articles?business_id=eq.${businessId}&select=title,content`);
-      if (kbResult.data) businessData.kb_articles = kbResult.data as KBArticle[];
-
-      // Check if a courier is connected (for auto-shipment after orders)
-      const courierPlatforms = [
-        "easypost","shippo","aftership","shiprocket",
-        "pathao","steadfast","redx","paperfly","ecourier","sundarban",
-        "delhivery","bluedart","dtdc","ekart","xpressbees",
-        "tcs","leopards","mnp","ninjavan","jtexpress","lalamove","lbc","kerry","poslaju",
-        "sfexpress","cainiao","zto","yto","yamato","cjlogistics",
-        "dhl","fedex","ups","usps","tnt",
-        "gls","postnl","dpd","hermes","royalmail","colissimo",
-        "bpost","deutschepost","correos","posteitaliane",
-        "canadapost","correios","estafeta","ontrac","dhlecommerce",
-        "auspost","startrack","aramex_au","nzpost",
-        "aramex","naqel","smsa","dpd_africa","postnet",
-        "cdek","russianpost",
-      ];
-      const courierQuery = courierPlatforms.map(p => `"${p}"`).join(",");
-      const courResult = await directSupabaseRequest('GET',
-        `/rest/v1/platform_integrations?business_id=eq.${businessId}&status=eq.connected&platform=in.(${courierQuery})&select=platform&limit=1`);
-      businessData.has_courier = Array.isArray(courResult.data) && courResult.data.length > 0;
-
-      setBusiness(businessData);
-    }
+    const result = await directSupabaseRequest('POST', '/rest/v1/rpc/get_public_business', { business_id: businessId });
+    const row = Array.isArray(result.data) ? result.data[0] : null;
+    if (row) setBusiness(row as Business);
   };
 
   // ---- MESSAGES ----

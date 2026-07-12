@@ -33,9 +33,13 @@ interface ChatSession {
 
 interface ChatSessionsProps {
   businessId: string;
+  /** "escalated" renders the dedicated Escalated Chats view (only sessions the
+   * AI handed to a human, reply box open by default). Default: all sessions. */
+  filter?: "escalated";
 }
 
-const ChatSessions = ({ businessId }: ChatSessionsProps) => {
+const ChatSessions = ({ businessId, filter }: ChatSessionsProps) => {
+  const escalatedOnly = filter === "escalated";
   const { toast } = useToast();
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -66,7 +70,7 @@ const ChatSessions = ({ businessId }: ChatSessionsProps) => {
   const loadSessions = async () => {
     try {
       // console.log('Loading sessions for business:', businessId);
-      const { data, error } = await supabase
+      let query = supabase
         .from("chat_sessions")
         .select(`
           *,
@@ -80,6 +84,10 @@ const ChatSessions = ({ businessId }: ChatSessionsProps) => {
         `)
         .eq("business_id", businessId)
         .order("created_at", { ascending: false });
+
+      if (escalatedOnly) query = query.eq("status", "escalated");
+
+      const { data, error } = await query;
 
       if (error) throw error;
       
@@ -297,19 +305,35 @@ const ChatSessions = ({ businessId }: ChatSessionsProps) => {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold">Chat Sessions</h3>
+        <h3 className="text-lg font-semibold">{escalatedOnly ? "Escalated Chats" : "Chat Sessions"}</h3>
         <p className="text-sm text-muted-foreground">
-          Monitor customer conversations and handle escalated cases
+          {escalatedOnly
+            ? "Conversations your AI handed over because it couldn't answer or the customer asked for a human. Reply here — the customer sees your messages in their chat."
+            : "Monitor customer conversations and handle escalated cases"}
         </p>
       </div>
 
       {sessions.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
-            <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-            <p className="text-muted-foreground">
-              No chat sessions yet. Share your chat link with customers to get started.
-            </p>
+            {escalatedOnly ? (
+              <>
+                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
+                <p className="text-muted-foreground">
+                  No escalated chats — your AI is handling everything on its own. 🎉
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  When the AI can't answer, the chat appears here and you get an email notification.
+                </p>
+              </>
+            ) : (
+              <>
+                <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">
+                  No chat sessions yet. Share your chat link with customers to get started.
+                </p>
+              </>
+            )}
           </CardContent>
         </Card>
       ) : (

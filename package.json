@@ -11,14 +11,23 @@
     "build:prerender": "vite build && react-snap",
     "lint": "eslint .",
     "preview": "vite preview",
-    "preview:production": "vite preview --port 4173 --host"
+    "preview:production": "vite preview --port 4173 --host",
+    "assets:process": "python scripts/process_assets.py",
+    "assets:upload": "node scripts/upload-r2.mjs",
+    "assets:upload:dry": "node scripts/upload-r2.mjs --dry-run"
   },
   "reactSnap": {
     "source": "dist",
-    "include": ["/", "/privacy"],
+    "include": [
+      "/",
+      "/privacy"
+    ],
     "skipThirdPartyRequests": true,
     "inlineCss": false,
-    "puppeteerArgs": ["--no-sandbox", "--disable-setuid-sandbox"]
+    "puppeteerArgs": [
+      "--no-sandbox",
+      "--disable-setuid-sandbox"
+    ]
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -59,6 +68,7 @@
     "cmdk": "^1.1.1",
     "date-fns": "^3.6.0",
     "embla-carousel-react": "^8.6.0",
+    "gsap": "^3.15.0",
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
@@ -77,6 +87,7 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@aws-sdk/client-s3": "^3.1085.0",
     "@eslint/js": "^9.32.0",
     "@tailwindcss/typography": "^0.5.16",
     "@types/node": "^22.18.1",

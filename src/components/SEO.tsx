@@ -14,7 +14,7 @@ export const SEO = ({
     title,
     description = "OctaDezx is an AI customer care platform that answers customer questions, resolves support tickets, and captures orders 24/7 across WhatsApp, Instagram, Facebook and Shopify — the always-on AI customer service agent for modern businesses.",
     canonical = "https://octadezx.com/",
-    image = "https://octadezx.com/logo.jpeg",
+    image = "https://octadezx.com/og-image.png",
     type = "website",
     keywords = "customer care, customer care AI, AI customer service, AI customer support, customer support automation, AI support agent, 24/7 customer care, AI chatbot for customer service, order automation, ecommerce customer support",
     author = "OctaDezx"
@@ -39,8 +39,8 @@ export const SEO = ({
             "logo": {
                 "@type": "ImageObject",
                 "url": "https://octadezx.com/logo.jpeg",
-                "width": 512,
-                "height": 512
+                "width": 2048,
+                "height": 2048
             },
             "description": "AI customer care and customer service platform that answers customers, resolves support requests, and captures orders 24/7.",
             "foundingDate": "2024",
@@ -107,6 +107,12 @@ export const SEO = ({
             "url": canonical,
             "name": fullTitle,
             "description": description,
+            "primaryImageOfPage": {
+                "@type": "ImageObject",
+                "url": image,
+                "caption": `${siteName} — 24/7 AI customer care agent`
+            },
+            "image": image,
             "isPartOf": {
                 "@id": "https://octadezx.com/#website"
             },
@@ -244,6 +250,7 @@ export const SEO = ({
             <meta property="og:image" content={image} />
             <meta property="og:image:width" content="1200" />
             <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content={`${siteName} — 24/7 AI customer care agent`} />
             <meta property="og:site_name" content={siteName} />
             <meta property="og:locale" content="en_US" />
 
@@ -259,8 +266,8 @@ export const SEO = ({
             {/* Additional SEO */}
             <meta name="application-name" content="OctaDezx" />
             <meta name="apple-mobile-web-app-title" content="OctaDezx" />
-            <meta name="theme-color" content="#1e3a5f" />
-            <meta name="msapplication-TileColor" content="#1e3a5f" />
+            <meta name="theme-color" content="#000047" />
+            <meta name="msapplication-TileColor" content="#000047" />
 
             {/* Search-engine verification (codes set at the top of this component) */}
             {GOOGLE_SITE_VERIFICATION && <meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />}

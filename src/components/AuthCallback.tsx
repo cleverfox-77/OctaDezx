@@ -17,7 +17,14 @@ const AuthCallback = () => {
             if (hash.includes('type=recovery') || search.includes('type=recovery')) {
                 navigate('/reset-password');
             } else {
-                navigate('/dashboard');
+                // Return to the MCP OAuth consent screen if we came from there.
+                const ret = sessionStorage.getItem('octadezx_oauth_return');
+                if (ret) {
+                    sessionStorage.removeItem('octadezx_oauth_return');
+                    navigate(ret);
+                } else {
+                    navigate('/dashboard');
+                }
             }
         });
     }, [navigate]);
