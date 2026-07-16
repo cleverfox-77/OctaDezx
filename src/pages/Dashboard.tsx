@@ -20,6 +20,7 @@ import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog"
 import { DailyUsage } from "@/components/DailyUsage";
 import BusinessSetup from "@/components/BusinessSetup";
 import DashboardOverview from "@/components/DashboardOverview";
+import LeadsFollowups from "@/components/LeadsFollowups";
 import ProductCatalogWithScraper from "@/components/ProductCatalogWithScraper";
 import ChatSessions from "@/components/ChatSessions";
 import KnowledgeBase from "./KnowledgeBase";
@@ -35,7 +36,7 @@ import InvoiceSettings from "@/components/InvoiceSettings";
 import AiTraining from "@/components/AiTraining";
 import McpConnect from "@/components/McpConnect";
 import { VideoPlayer } from "@/components/VideoPlayer";
-import { navForType, sectionLabel, type SectionId } from "@/lib/businessTypes";
+import { navForType, sectionLabel, SECTION_DESCRIPTIONS, type SectionId } from "@/lib/businessTypes";
 import { type Database } from "@/integrations/supabase/types";
 
 type Business = Database["public"]["Tables"]["businesses"]["Row"];
@@ -421,6 +422,7 @@ const Dashboard = () => {
       case "products": return <ProductCatalogWithScraper businessId={selectedBusiness.id} />;
       case "chats": return <ChatSessions businessId={selectedBusiness.id} />;
       case "escalated": return <ChatSessions businessId={selectedBusiness.id} filter="escalated" />;
+      case "leads": return <LeadsFollowups business={selectedBusiness} onBusinessUpdated={handleSettingsUpdated} />;
       case "api-keys": return <ApiKeys businessId={selectedBusiness.id} />;
       case "orders": return <Orders businessId={selectedBusiness.id} />;
       case "shipments": return <Shipments businessId={selectedBusiness.id} />;
@@ -429,34 +431,40 @@ const Dashboard = () => {
       case "integrations": return <PlatformIntegrations businessId={selectedBusiness.id} />;
       case "knowledge-base": return <KnowledgeBase businessId={selectedBusiness.id} />;
       case "tutorial": return (
-        <Card>
-          <CardHeader>
-            <CardTitle>Getting Started with OctaDezx</CardTitle>
-            <CardDescription>Watch this tutorial to learn how to set up and use your AI chatbot</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
+        <div className="space-y-6">
+          <Card className="overflow-hidden">
             <div className="aspect-video w-full">
               <VideoPlayer videoId="1V-H3lsAXNc" title="OctaDezx Tutorial" />
             </div>
-            <div className="space-y-4">
-              <h3 className="font-semibold text-lg">Quick Start Steps:</h3>
-              <ol className="list-decimal list-inside space-y-2 text-sm text-muted-foreground">
-                <li>Configure your business settings in Overview</li>
-                <li>Add products via manual upload or URL scraper</li>
-                <li>Set up knowledge base articles for common questions</li>
-                <li>Test the chatbot using the Chat Link</li>
-                <li>Monitor conversations in Chat Sessions</li>
-                <li>Review analytics to improve customer service</li>
-              </ol>
-            </div>
-            <div className="space-y-2 border-t pt-4">
-              <h3 className="font-semibold">Need Help?</h3>
+            <CardContent className="pt-5">
+              <h3 className="font-semibold text-base mb-1">Getting started with OctaDezx</h3>
               <p className="text-sm text-muted-foreground">
-                Explore each section to get familiar with the platform. The Products section lets you import entire catalogs from Shopify, WooCommerce, and more.
+                A full walkthrough of setup, training and going live — about 5 minutes.
               </p>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {([
+              ["01", "Set up your basics", "Business details and AI personality live in Overview.", "overview"],
+              ["02", "Import your catalogue", "Add products manually, by CSV or straight from a store URL.", "products"],
+              ["03", "Teach it your answers", "Knowledge base articles cut escalations dramatically.", "knowledge-base"],
+              ["04", "Test it yourself", "Open your chat link and talk to your own AI like a customer.", "overview"],
+              ["05", "Watch conversations", "Every chat is transcribed — jump in whenever you want.", "chats"],
+              ["06", "Improve with data", "Analytics shows what customers ask and what converts.", "analytics"],
+            ] as [string, string, string, SectionId][]).map(([num, title, desc, target]) => (
+              <button key={num} onClick={() => navigate(target)}
+                className="press group text-left rounded-2xl border bg-card p-5 transition-all hover:border-primary/30 hover:shadow-md">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-2xl font-black text-muted-foreground/20 select-none">{num}</span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+                <div className="text-sm font-semibold mb-1">{title}</div>
+                <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
       );
       default: return null;
     }
@@ -635,18 +643,25 @@ const Dashboard = () => {
           {/* key remounts the wrapper per section so every switch gets the
               same brief enter transition — navigation feels acknowledged */}
           <div key={activeSection} className="section-enter container max-w-5xl mx-auto px-4 py-6">
-            {/* Page title on desktop */}
-            <div className="hidden sm:flex items-center gap-2 mb-6">
-              {currentNavItem && (
-                <>
-                  <currentNavItem.icon className="h-5 w-5 text-muted-foreground" />
-                  <h2 className="text-xl font-semibold">{currentNavItem.label}</h2>
+            {/* Page title + purpose on desktop */}
+            {currentNavItem && (
+              <div className="hidden sm:block mb-6">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <currentNavItem.icon className="h-4 w-4 text-primary" />
+                  </div>
+                  <h2 className="text-xl font-semibold tracking-tight">{currentNavItem.label}</h2>
                   {activeSection === "integrations" && (
                     <Badge className="text-[10px] px-1.5 py-0.5">NEW</Badge>
                   )}
-                </>
-              )}
-            </div>
+                </div>
+                {activeSection !== "profile" && activeSection !== "billing" && (
+                  <p className="text-sm text-muted-foreground mt-1.5 ml-[46px]">
+                    {SECTION_DESCRIPTIONS[activeSection as SectionId]}
+                  </p>
+                )}
+              </div>
+            )}
 
             {renderContent()}
           </div>

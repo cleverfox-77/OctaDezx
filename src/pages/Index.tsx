@@ -67,6 +67,7 @@ const INTEGRATIONS = [
 const NAV_LINKS = [
   { label: "Features",     href: "#features" },
   { label: "How it Works", href: "#how"       },
+  { label: "Claude MCP",   href: "#claude"    },
   { label: "Pricing",      href: "#pricing"   },
   { label: "Live Demo",    href: "#demo"      },
   { label: "Support",      href: "#contact"   },
@@ -248,7 +249,7 @@ const Index = () => {
   /* Highlight the nav link of whichever section crosses mid-viewport */
   const [activeNav, setActiveNav] = useState("");
   useEffect(() => {
-    const ids = ["features", "how", "tour", "pricing", "demo", "contact"];
+    const ids = ["features", "followups", "how", "tour", "claude", "solutions", "pricing", "demo", "contact"];
     const els = ids.map((id) => document.getElementById(id)).filter(Boolean) as HTMLElement[];
     const obs = new IntersectionObserver(
       (entries) => entries.forEach((e) => { if (e.isIntersecting) setActiveNav(`#${e.target.id}`); }),
@@ -452,7 +453,7 @@ const Index = () => {
                     {NAV_LINKS.map((l) => (
                       <a key={l.label} href={l.href} onClick={() => setSettingsOpen(false)}
                         className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
-                        <MI name={l.label === "Features" ? "bolt" : l.label === "How it Works" ? "route" : l.label === "Pricing" ? "payments" : l.label === "Live Demo" ? "chat" : "support_agent"}
+                        <MI name={l.label === "Features" ? "bolt" : l.label === "How it Works" ? "route" : l.label === "Claude MCP" ? "smart_toy" : l.label === "Pricing" ? "payments" : l.label === "Live Demo" ? "chat" : "support_agent"}
                           className="text-base flex-shrink-0" style={{ color: "#000047" }} />
                         {l.label}
                       </a>
@@ -500,7 +501,7 @@ const Index = () => {
               {NAV_LINKS.map((l) => (
                 <a key={l.label} href={l.href} onClick={closeMobileMenu}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
-                  <MI name={l.label === "Features" ? "bolt" : l.label === "How it Works" ? "route" : l.label === "Pricing" ? "payments" : l.label === "Live Demo" ? "chat" : "support_agent"}
+                  <MI name={l.label === "Features" ? "bolt" : l.label === "How it Works" ? "route" : l.label === "Claude MCP" ? "smart_toy" : l.label === "Pricing" ? "payments" : l.label === "Live Demo" ? "chat" : "support_agent"}
                     className="text-lg flex-shrink-0" style={{ color: "#000047" }} />
                   {l.label}
                 </a>
@@ -906,7 +907,7 @@ const Index = () => {
               { icon: "bolt",        color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Instant, on-brand replies", desc: "Trained on your catalogue, policies and voice, so it sounds like you, not a bot.", hover: "group-hover:scale-125", img: "/media/card-training.webp", imgAlt: "Documents flowing into the OctaDezx AI core" },
               { icon: "insights",    color: "#000047", bg: "rgba(0,0,71,0.1)", title: "Revenue-grade analytics",  desc: "Conversion, AOV, resolution time and top products, live in one dashboard.", hover: "group-hover:scale-110", img: "/media/card-analytics.webp", imgAlt: "Rising conversion bar chart with a 94% resolution badge" },
               { icon: "shield_lock", color: "#4f46e5", bg: "rgba(79,70,229,0.1)",  title: "Enterprise security",       desc: "End-to-end encryption, role-based access, GDPR-ready infrastructure.", hover: "group-hover:rotate-6", img: "/media/card-security.webp", imgAlt: "Navy octagonal shield with a glowing keyhole" },
-              { icon: "target",      color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Smart lead scoring",        desc: "High-intent conversations auto-routed to your sales team with full context.", hover: "group-hover:scale-110", viz: <LeadScoreViz /> },
+              { icon: "target",      color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Leads, captured & followed up", desc: "Every contact becomes a lead. The AI follows your playbook to re-engage them — and you can reach out with one click.", hover: "group-hover:scale-110", viz: <LeadScoreViz /> },
             ].map((card, i) => (
               <div key={card.title}
                 className={`bento rounded-[2rem] p-7 flex flex-col group overflow-hidden ${["reveal-r","reveal","reveal-l","reveal","reveal-r"][i]}`}
@@ -956,6 +957,70 @@ const Index = () => {
                 style={{ background: "linear-gradient(to left,rgba(0,0,71,0.04),transparent)" }} />
             </div>
 
+          </div>
+        </section>
+
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        {/* ══ FOLLOW-UPS & LEAD OUTREACH ══ */}
+        <section id="followups" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
+          <div className="grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+            {/* Copy */}
+            <div className="reveal-l">
+              <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Follow-ups &amp; lead outreach</span>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-5 tracking-tight">
+                The sale isn't over when the chat goes quiet
+              </h2>
+              <p className="text-base leading-relaxed mb-6" style={{ color: "#667085" }}>
+                Most interested customers don't buy on the first message — they compare, get
+                distracted, and forget. OctaDezx captures every lead automatically and follows
+                up the way <strong className="text-slate-900">you</strong> would.
+              </p>
+              <ul className="space-y-4">
+                {[
+                  ["playbook", "menu_book", "Your follow-up playbook", "Write plain-language rules — “if someone abandons mid-order, remind them their size is reserved” — and the AI applies them in every conversation, in the customer's language."],
+                  ["capture", "person_add", "Automatic lead capture", "Every customer who shares a name or email becomes a lead in your dashboard, with the full conversation attached."],
+                  ["outreach", "send", "One-click outreach", "Re-engage quiet leads from the dashboard — your message lands directly in their existing chat thread, not a cold email they'll ignore."],
+                ].map(([key, icon, title, desc]) => (
+                  <li key={key} className="flex items-start gap-4">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,71,0.08)" }}>
+                      <MI name={icon} className="text-lg" style={{ color: "#000047" }} />
+                    </div>
+                    <div>
+                      <div className="font-bold text-slate-900 text-sm sm:text-base mb-1">{title}</div>
+                      <p className="text-sm leading-relaxed" style={{ color: "#667085" }}>{desc}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Timeline vignette */}
+            <div className="reveal-r">
+              <div className="glass-strong rounded-[2rem] p-6 sm:p-8 space-y-4">
+                <div className="label text-[9px] text-slate-400 mb-2">A lead's journey, on autopilot</div>
+                {[
+                  { time: "Tue 10:42", icon: "chat", tone: "#1d4ed8", text: "Diego asks about Chelsea boots, size 44 — doesn't order." },
+                  { time: "Tue 10:44", icon: "person_add", tone: "#7c3aed", text: "Lead captured: Diego L. · diego@… — visible in your dashboard." },
+                  { time: "Wed 09:00", icon: "send", tone: "#000047", text: "Follow-up per your playbook: “Still interested? Your size is reserved until Friday.”" },
+                  { time: "Wed 11:12", icon: "check_circle", tone: "#16a34a", text: "Order #OD-2051 confirmed — $189, payment verified." },
+                ].map((step, i, arr) => (
+                  <div key={step.time} className="flex gap-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+                        style={{ background: `${step.tone}14` }}>
+                        <MI name={step.icon} className="text-base" style={{ color: step.tone }} />
+                      </div>
+                      {i < arr.length - 1 && <div className="w-px flex-1 my-1" style={{ background: "#e8eaee" }} />}
+                    </div>
+                    <div className="pb-5">
+                      <div className="label text-[9px] text-slate-400 mb-1">{step.time}</div>
+                      <p className="text-sm text-slate-700 leading-relaxed">{step.text}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1036,6 +1101,90 @@ const Index = () => {
           </div>
         </section>
 
+        {/* ══ CLAUDE MCP ══ */}
+        <section id="claude" className="py-12 sm:py-20 md:py-28 relative overflow-hidden"
+          style={{ background: "linear-gradient(180deg, #0b0b2e 0%, #000047 100%)" }}>
+          <div className="absolute inset-0 opacity-[0.05] pointer-events-none"
+            style={{ backgroundImage: "linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px)", backgroundSize: "56px 56px" }} />
+          <div className="relative max-w-[1440px] mx-auto px-4 sm:px-6 grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
+
+            {/* Copy */}
+            <div className="reveal-l">
+              <span className="label text-[10px] mb-4 inline-flex items-center gap-2 px-3 py-1.5 rounded-full"
+                style={{ color: "#b4c5ff", background: "rgba(180,197,255,0.1)", border: "1px solid rgba(180,197,255,0.25)" }}>
+                <MI name="smart_toy" className="text-sm" /> Native MCP server · Model Context Protocol
+              </span>
+              <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-5 tracking-tight">
+                Run your business from inside Claude
+              </h2>
+              <p className="text-base leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.75)" }}>
+                OctaDezx ships a native <strong className="text-white">MCP (Model Context Protocol) server</strong> —
+                connect Claude to your business at <code className="text-xs px-2 py-1 rounded-md" style={{ background: "rgba(255,255,255,0.1)", color: "#b4c5ff" }}>octadezx.com/mcp</code> and
+                manage everything in plain language. No dashboard tab required.
+              </p>
+              <ul className="space-y-3 mb-8">
+                {[
+                  "“Any customers waiting on us?” — Claude lists escalated chats with context",
+                  "“Reply to Sofia that her refund was processed” — sent into the live conversation",
+                  "“Add this to the knowledge base so it never escalates again” — the AI learns it instantly",
+                  "Check orders, update products and review conversations — all from Claude",
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-3 text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
+                    <MI name="check_circle" className="text-base flex-shrink-0 mt-[1px]" style={{ color: "#4ade80" }} />
+                    {t}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+                Works with claude.ai connectors and Claude Code · Secured with OAuth — you approve access, revoke anytime
+              </p>
+            </div>
+
+            {/* Claude conversation vignette */}
+            <div className="reveal-r">
+              <div className="rounded-[1.5rem] overflow-hidden"
+                style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.12)", backdropFilter: "blur(10px)" }}>
+                <div className="flex items-center gap-2.5 px-5 py-3.5" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+                  <span className="w-2.5 h-2.5 rounded-full" style={{ background: "#d97757" }} />
+                  <span className="text-xs font-semibold text-white/80">Claude</span>
+                  <span className="label text-[8px] ml-auto px-2 py-0.5 rounded-full" style={{ color: "#b4c5ff", background: "rgba(180,197,255,0.1)" }}>
+                    OctaDezx connected
+                  </span>
+                </div>
+                <div className="p-5 space-y-3.5">
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md text-sm text-white" style={{ background: "rgba(255,255,255,0.12)" }}>
+                      Any customers waiting on us?
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    <MI name="build" className="text-xs" />
+                    <span className="font-mono">list_escalated_chats</span> · OctaDezx MCP
+                  </div>
+                  <div className="flex justify-start">
+                    <div className="max-w-[90%] px-4 py-3 rounded-2xl rounded-bl-md text-sm leading-relaxed" style={{ background: "rgba(255,255,255,0.06)", color: "rgba(255,255,255,0.85)" }}>
+                      Two customers are waiting: <strong className="text-white">Sofia</strong> has a refund question
+                      (12 min) and <strong className="text-white">James</strong> asked about bulk pricing (34 min).
+                      Want me to draft replies?
+                    </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <div className="max-w-[85%] px-4 py-2.5 rounded-2xl rounded-br-md text-sm text-white" style={{ background: "rgba(255,255,255,0.12)" }}>
+                      Tell Sofia her refund went out today.
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 text-[11px]" style={{ color: "rgba(255,255,255,0.45)" }}>
+                    <MI name="build" className="text-xs" />
+                    <span className="font-mono">reply_to_customer</span>
+                    <MI name="check_circle" className="text-xs" style={{ color: "#4ade80" }} />
+                    <span style={{ color: "#4ade80" }}>Sent to Sofia's chat</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* ══ INTEGRATIONS ══ */}
         <section id="integrations" className="py-12 sm:py-20 relative overflow-hidden"
           style={{ background: "#ebedf1" }}>
@@ -1083,6 +1232,47 @@ const Index = () => {
             <button className="glass text-slate-800 px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition-all inline-flex items-center gap-2 text-sm reveal">
               View all 50+ integrations <MI name="arrow_forward" />
             </button>
+          </div>
+        </section>
+
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        {/* ══ FOR EVERY BUSINESS ══ */}
+        <section id="solutions" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
+          <div className="text-center mb-10 sm:mb-14 reveal">
+            <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Built for every business</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+              From solo founders to enterprise teams
+            </h2>
+            <p className="max-w-2xl mx-auto text-base" style={{ color: "#667085" }}>
+              The dashboard adapts to how your business actually works — a restaurant gets menus
+              and reservations, an agency gets lead capture, a store gets orders and shipments.
+              A restaurant never sees "Shipments". Same 10-minute setup for everyone.
+            </p>
+          </div>
+          <div className="stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+            {[
+              { icon: "storefront",        label: "E-commerce",       desc: "Catalogue, orders, shipments & invoices" },
+              { icon: "store",             label: "Retail stores",    desc: "Stock questions, locations & hours" },
+              { icon: "restaurant",        label: "Restaurants",      desc: "Menus, food orders & reservations" },
+              { icon: "work",              label: "Agencies",         desc: "Service enquiries & lead qualification" },
+              { icon: "cloud",             label: "SaaS & software",  desc: "Plan questions, support & demos" },
+              { icon: "stethoscope",       label: "Clinics",          desc: "Services, hours & appointment requests" },
+              { icon: "school",            label: "Education",        desc: "Programs, fees & admissions" },
+              { icon: "account_balance",   label: "Finance",          desc: "Compliant service info & hand-offs" },
+              { icon: "home_work",         label: "Real estate",      desc: "Listings & viewing requests" },
+              { icon: "flight",            label: "Travel",           desc: "Packages, bookings & itineraries" },
+              { icon: "domain",            label: "Enterprise",       desc: "Multi-department routing at scale" },
+              { icon: "handyman",          label: "Local services",   desc: "Quotes, service areas & scheduling" },
+            ].map((b) => (
+              <div key={b.label} className="glass rounded-2xl p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: "rgba(0,0,71,0.08)" }}>
+                  <MI name={b.icon} className="text-lg" style={{ color: "#000047" }} />
+                </div>
+                <div className="font-bold text-slate-900 text-sm mb-1">{b.label}</div>
+                <p className="text-xs leading-relaxed" style={{ color: "#667085" }}>{b.desc}</p>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -1178,6 +1368,10 @@ const Index = () => {
             <p className="max-w-xl mx-auto text-base" style={{ color: "#667085" }}>
               Chat with <strong className="text-slate-900">Merrell</strong>, a real premium leather shoe store powered by OctaDezx.
               Ask about products, prices, or place an order. It all works.
+            </p>
+            <p className="max-w-xl mx-auto text-sm mt-3" style={{ color: "#98a2b3" }}>
+              Business owners: after setup you get the same kind of link as your own
+              test drive — open it any time to see exactly how your AI handles customers.
             </p>
           </div>
 
@@ -1304,6 +1498,9 @@ const Index = () => {
               { q: "Which channels does the AI customer service agent cover?", a: "WhatsApp, Instagram, Facebook, Shopify and your website widget out of the box, plus 50+ integrations, all answered from one place in your customers' own language." },
               { q: "Does it take orders, not just answer questions?", a: "Yes. Beyond support, OctaDezx confirms and places orders for you. Every price and total is verified on our servers against your catalogue, so customers are always charged the correct amount." },
               { q: "How fast can I go live?", a: "Under 10 minutes. Paste a storefront URL to import your catalogue, add your policies and FAQs, connect a channel, and your AI customer care agent is live." },
+              { q: "Can OctaDezx follow up with customers and leads?", a: "Yes. Every customer who shares contact details becomes a lead in your dashboard. You write a follow-up playbook in plain language and the AI applies it in every conversation — you can also send one-click follow-ups that land directly in the customer's existing chat thread." },
+              { q: "What is the OctaDezx MCP server for Claude?", a: "OctaDezx ships a native Model Context Protocol (MCP) server at octadezx.com/mcp. Connect it to Claude and manage your business in plain language: list escalated chats, read conversations, reply to customers, check orders, update products and teach the knowledge base — secured with OAuth." },
+              { q: "What types and sizes of business does it work for?", a: "Everything from solo founders to enterprise teams: e-commerce, retail, restaurants, agencies, SaaS, clinics, education, finance, real estate, travel and local services. The dashboard adapts to each type — a restaurant gets menus and reservations, a store gets orders and shipments." },
               { q: "Is there a free trial?", a: "Yes, a 24-hour free trial with full access to every feature. No credit card required." },
             ].map((f) => (
               <div key={f.q} className="glass rounded-2xl p-6">

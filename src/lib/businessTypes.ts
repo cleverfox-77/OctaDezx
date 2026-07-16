@@ -16,7 +16,7 @@ import {
   ShoppingBag, Store, Briefcase, Cloud, UtensilsCrossed, Stethoscope,
   GraduationCap, Landmark, Home, Plane, Building2, Sparkles,
   MessageSquare, Users, BarChart2, BookOpen, PlayCircle, Plug,
-  Truck, FileText, ReceiptText, AlertTriangle, KeyRound, Brain, Bot,
+  Truck, FileText, ReceiptText, AlertTriangle, KeyRound, Brain, Bot, UserPlus,
   type LucideIcon,
 } from "lucide-react";
 
@@ -244,7 +244,7 @@ export const getBusinessType = (typeId: string | null | undefined): BusinessType
 
 // ── Dashboard navigation, per business type ─────────────────────────────────
 export type SectionId =
-  | "overview" | "train" | "analytics" | "products" | "chats" | "escalated"
+  | "overview" | "train" | "analytics" | "products" | "chats" | "escalated" | "leads"
   | "orders" | "shipments" | "invoices" | "invoice-settings"
   | "integrations" | "api-keys" | "claude-mcp" | "knowledge-base" | "tutorial";
 
@@ -263,6 +263,7 @@ const SECTION_META: Record<SectionId, { label: string; icon: LucideIcon; isNew?:
   products: { label: "Products", icon: ShoppingBag },
   chats: { label: "Chat Sessions", icon: Users },
   escalated: { label: "Escalated Chats", icon: AlertTriangle },
+  leads: { label: "Leads & Follow-ups", icon: UserPlus, isNew: true },
   orders: { label: "Orders", icon: ShoppingBag },
   shipments: { label: "Shipments", icon: Truck },
   invoices: { label: "Invoices", icon: FileText },
@@ -275,6 +276,27 @@ const SECTION_META: Record<SectionId, { label: string; icon: LucideIcon; isNew?:
   tutorial: { label: "Tutorial", icon: PlayCircle },
 };
 
+// One-line purpose shown under every section title — keeps the whole dashboard
+// self-explanatory instead of a bare heading over a wall of widgets.
+export const SECTION_DESCRIPTIONS: Record<SectionId, string> = {
+  overview: "Your business at a glance — live stats, setup progress and quick actions.",
+  train: "Teach the AI your services, policies and tone so it answers exactly like your team would.",
+  products: "Everything the AI can talk about and sell — import from a URL, CSV or add items manually.",
+  chats: "Every customer conversation across all channels, with full transcripts. Jump in any time.",
+  escalated: "Conversations the AI handed to your team — each one arrives with full context.",
+  leads: "Customers who shared contact details — follow up, re-engage and close them, right from here.",
+  orders: "Orders the AI captured and confirmed, with server-verified pricing.",
+  shipments: "Track fulfilment status for every confirmed order.",
+  invoices: "Invoices generated from confirmed orders — download, resend or void.",
+  "invoice-settings": "Numbering, logo and footer details that appear on every invoice.",
+  "knowledge-base": "Articles the AI answers from — the more you add, the fewer escalations you get.",
+  analytics: "Resolution rate, response times, revenue and top products — live, not last week.",
+  integrations: "Connect WhatsApp, Instagram, Facebook, Shopify and more to answer everywhere.",
+  "api-keys": "Programmatic access for developers — create, rotate and revoke keys.",
+  "claude-mcp": "Manage your business from inside Claude — orders, replies and training via MCP.",
+  tutorial: "A guided tour of everything OctaDezx can do for your business.",
+};
+
 interface TypeNav {
   // Ordered list of business sections this type sees.
   sections: SectionId[];
@@ -284,7 +306,7 @@ interface TypeNav {
 
 // Sections every business gets, in a sensible order around the type-specific ones.
 const COMMERCE_FULL: SectionId[] = [
-  "overview", "train", "products", "chats", "escalated",
+  "overview", "train", "products", "chats", "escalated", "leads",
   "orders", "shipments", "invoices", "invoice-settings",
   "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial",
 ];
@@ -292,7 +314,7 @@ const COMMERCE_FULL: SectionId[] = [
 // Service businesses: no physical fulfilment (orders/shipments/invoices) — they
 // run on conversations, lead capture and a knowledge base instead.
 const SERVICE_BASE: SectionId[] = [
-  "overview", "train", "products", "chats", "escalated",
+  "overview", "train", "products", "chats", "escalated", "leads",
   "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial",
 ];
 
@@ -300,15 +322,15 @@ const TYPE_NAV: Record<string, TypeNav> = {
   ecommerce: { sections: COMMERCE_FULL },
   enterprise: { sections: COMMERCE_FULL, labels: { products: "Catalog" } },
   retail: {
-    sections: ["overview", "train", "products", "chats", "escalated", "orders", "invoices", "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial"],
+    sections: ["overview", "train", "products", "chats", "escalated", "leads", "orders", "invoices", "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial"],
     labels: { products: "Catalog" },
   },
   restaurant: {
-    sections: ["overview", "train", "products", "chats", "escalated", "orders", "invoices", "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial"],
+    sections: ["overview", "train", "products", "chats", "escalated", "leads", "orders", "invoices", "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial"],
     labels: { products: "Menu", orders: "Orders & Reservations" },
   },
   travel: {
-    sections: ["overview", "train", "products", "chats", "escalated", "orders", "invoices", "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial"],
+    sections: ["overview", "train", "products", "chats", "escalated", "leads", "orders", "invoices", "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial"],
     labels: { products: "Packages", orders: "Bookings" },
   },
   agency: { sections: SERVICE_BASE, labels: { products: "Services", escalated: "Escalated / Leads" } },
@@ -318,7 +340,7 @@ const TYPE_NAV: Record<string, TypeNav> = {
   finance: { sections: SERVICE_BASE, labels: { products: "Services" } },
   realestate: { sections: SERVICE_BASE, labels: { products: "Listings", escalated: "Escalated / Viewings" } },
   other: {
-    sections: ["overview", "train", "products", "chats", "escalated", "orders", "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial"],
+    sections: ["overview", "train", "products", "chats", "escalated", "leads", "orders", "knowledge-base", "integrations", "analytics", "api-keys", "claude-mcp", "tutorial"],
     labels: { products: "Catalog" },
   },
 };

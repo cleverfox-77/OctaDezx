@@ -195,17 +195,23 @@ const DashboardOverview = ({ business, chatLink, onNavigate }: Props) => {
             <CardContent className="pt-6">
               <div className="flex items-center gap-2 mb-1">
                 <Link2 className="h-4 w-4 text-primary" />
-                <h3 className="font-semibold text-base">Your chat link</h3>
+                <h3 className="font-semibold text-base">Test &amp; share your AI</h3>
               </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Put it in your bio, auto-replies and receipts — customers chat instantly, no app needed.
+                This link is both your <strong className="text-foreground">test drive</strong> and your storefront:
+                open it to chat with your own AI like a customer would, then share it in your
+                bio, auto-replies and receipts.
               </p>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 mb-3">
                 <code className="flex-1 min-w-0 truncate rounded-lg bg-muted px-3 py-2.5 text-xs">{chatLink}</code>
                 <Button size="icon" variant="outline" onClick={handleCopy} aria-label="Copy chat link" className="press flex-shrink-0">
                   <Copy className="h-4 w-4" />
                 </Button>
               </div>
+              <Button onClick={() => window.open(chatLink, "_blank")} variant="outline" size="sm" className="press w-full">
+                <ExternalLink className="h-3.5 w-3.5 mr-2" />
+                Test how your AI handles chats
+              </Button>
             </CardContent>
           </Card>
 

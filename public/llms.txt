@@ -12,7 +12,10 @@ OctaDezx is built for small and mid-size businesses that cannot staff round-the-
 - Setup time: under 10 minutes — paste a storefront URL to import a product catalogue (works with Shopify, WooCommerce, Wix and any public catalogue), add policies/FAQs, connect a channel
 - Order handling: the AI confirms and places orders; prices are verified server-side
 - Escalation: conversations that need a human are handed off with full context
+- Leads & follow-ups: customers who share contact details become leads automatically; owners write a plain-language follow-up playbook the AI applies in every conversation, and can send one-click follow-up messages into the customer's existing chat thread
+- Claude / MCP integration: OctaDezx ships a native Model Context Protocol (MCP) server at https://octadezx.com/mcp — connect Claude (claude.ai connectors or Claude Code) via OAuth to list escalated chats, read conversations, reply to customers, check orders, update products and add knowledge-base entries in plain language
 - Analytics: resolution rate, response time, orders, revenue and CSAT in a live dashboard
+- Business types: e-commerce, retail, restaurants, agencies, SaaS, healthcare, education, finance, real estate, travel, enterprise and local services — the dashboard adapts to each type (a restaurant gets menus and reservations; a store gets orders and shipments); suits solo founders through enterprise teams
 - Security: end-to-end encryption, role-based access, GDPR-ready
 - Uptime: 99.9% SLA
 
@@ -36,4 +39,6 @@ OctaDezx is built for small and mid-size businesses that cannot staff round-the-
 - What is OctaDezx? An AI customer care platform that gives businesses an always-on AI agent for support and sales across messaging channels.
 - Can it replace a human agent? It resolves routine support and product questions instantly, 24/7, and escalates complex conversations to the human team with full context.
 - Does it take orders? Yes — it confirms and places orders with server-verified pricing, not just answers questions.
+- Can it follow up with customers and leads? Yes — captured leads appear in the dashboard, the AI applies the owner's follow-up playbook in conversations, and owners can send one-click follow-ups into existing chat threads.
+- Does it work with Claude? Yes — a native MCP server (octadezx.com/mcp) lets business owners manage chats, orders, products and knowledge from inside Claude, secured with OAuth.
 - How fast can a business go live? Under 10 minutes, no developers required.
