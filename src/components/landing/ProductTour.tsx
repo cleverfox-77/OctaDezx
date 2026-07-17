@@ -12,10 +12,10 @@ const MI = ({ name, className = "", style }: { name: string; className?: string;
 const TOUR_MS = 6000;
 
 const TABS = [
-  { id: "inbox",     label: "Conversations", icon: "forum",         blurb: "Every channel in one calm queue — AI resolves, your team supervises." },
+  { id: "inbox",     label: "Conversations", icon: "forum",         blurb: "Every channel in one calm queue. AI resolves, your team supervises." },
   { id: "orders",    label: "Orders",        icon: "orders",        blurb: "Captured, verified and confirmed by the AI. You just ship." },
-  { id: "analytics", label: "Analytics",     icon: "monitoring",    blurb: "Revenue, resolution time and CSAT — live, not last week." },
-  { id: "training",  label: "AI Training",   icon: "school",        blurb: "Teach it once. Paste policies, tone and FAQs — it stays on-brand." },
+  { id: "analytics", label: "Analytics",     icon: "monitoring",    blurb: "Revenue, resolution time and CSAT. Live, not last week." },
+  { id: "training",  label: "AI Training",   icon: "school",        blurb: "Teach it once. Paste policies, tone and FAQs, and it stays on-brand." },
 ] as const;
 
 type TabId = (typeof TABS)[number]["id"];
@@ -226,7 +226,7 @@ export const ProductTour = () => {
                 <div className="mock-row rounded-xl border-2 border-dashed px-4 py-4 flex items-center justify-center gap-2 text-xs font-semibold text-slate-400"
                   style={{ borderColor: "#e8eaee", animationDelay: "300ms" }}>
                   <MI name="add" className="text-base" />
-                  Drop a policy, FAQ or document — the AI learns it in seconds
+                  Drop a policy, FAQ or document and the AI learns it in seconds
                 </div>
               </div>
             )}

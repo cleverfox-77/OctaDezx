@@ -116,12 +116,21 @@
   opacity: 0; transform: translateY(22px);
   transition: opacity 0.55s cubic-bezier(0.16,1,0.3,1), transform 0.55s cubic-bezier(0.16,1,0.3,1);
 }
-.stagger.visible > *:nth-child(1) { opacity:1;transform:none;transition-delay:0.04s }
-.stagger.visible > *:nth-child(2) { opacity:1;transform:none;transition-delay:0.12s }
-.stagger.visible > *:nth-child(3) { opacity:1;transform:none;transition-delay:0.20s }
-.stagger.visible > *:nth-child(4) { opacity:1;transform:none;transition-delay:0.28s }
-.stagger.visible > *:nth-child(5) { opacity:1;transform:none;transition-delay:0.36s }
-.stagger.visible > *:nth-child(6) { opacity:1;transform:none;transition-delay:0.44s }
+/* All children reveal (any count) — nth-child rules below only stagger the delay */
+.stagger.visible > * { opacity: 1; transform: none; transition-delay: 0.5s; }
+.stagger.visible > *:nth-child(1)  { transition-delay: 0.04s }
+.stagger.visible > *:nth-child(2)  { transition-delay: 0.12s }
+.stagger.visible > *:nth-child(3)  { transition-delay: 0.20s }
+.stagger.visible > *:nth-child(4)  { transition-delay: 0.28s }
+.stagger.visible > *:nth-child(5)  { transition-delay: 0.36s }
+.stagger.visible > *:nth-child(6)  { transition-delay: 0.44s }
+.stagger.visible > *:nth-child(7)  { transition-delay: 0.50s }
+.stagger.visible > *:nth-child(8)  { transition-delay: 0.56s }
+.stagger.visible > *:nth-child(9)  { transition-delay: 0.62s }
+.stagger.visible > *:nth-child(10) { transition-delay: 0.68s }
+.stagger.visible > *:nth-child(11) { transition-delay: 0.74s }
+.stagger.visible > *:nth-child(12) { transition-delay: 0.80s }
+.stagger.visible > *:nth-child(n+13) { transition-delay: 0.86s }
 
 /* ── Hero word entrance ── */
 @keyframes wordIn {

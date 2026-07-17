@@ -134,8 +134,8 @@ const LeadScoreViz = () => (
   <div className="h-full w-full flex flex-col justify-center gap-3 px-4"
     style={{ background: "#f7f8fa", border: "1px solid #eef0f3", borderRadius: "0.75rem" }}>
     {[
-      { name: "Sofia — asking for bulk pricing", score: 92, tone: "#16a34a", tag: "Hot lead" },
-      { name: "James — comparing two models", score: 74, tone: "#d97706", tag: "Warm" },
+      { name: "Sofia: asking for bulk pricing", score: 92, tone: "#16a34a", tag: "Hot lead" },
+      { name: "James: comparing two models", score: 74, tone: "#d97706", tag: "Warm" },
     ].map((l) => (
       <div key={l.name}>
         <div className="flex items-center justify-between mb-1.5">
@@ -907,7 +907,7 @@ const Index = () => {
               { icon: "bolt",        color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Instant, on-brand replies", desc: "Trained on your catalogue, policies and voice, so it sounds like you, not a bot.", hover: "group-hover:scale-125", img: "/media/card-training.webp", imgAlt: "Documents flowing into the OctaDezx AI core" },
               { icon: "insights",    color: "#000047", bg: "rgba(0,0,71,0.1)", title: "Revenue-grade analytics",  desc: "Conversion, AOV, resolution time and top products, live in one dashboard.", hover: "group-hover:scale-110", img: "/media/card-analytics.webp", imgAlt: "Rising conversion bar chart with a 94% resolution badge" },
               { icon: "shield_lock", color: "#4f46e5", bg: "rgba(79,70,229,0.1)",  title: "Enterprise security",       desc: "End-to-end encryption, role-based access, GDPR-ready infrastructure.", hover: "group-hover:rotate-6", img: "/media/card-security.webp", imgAlt: "Navy octagonal shield with a glowing keyhole" },
-              { icon: "target",      color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Leads, captured & followed up", desc: "Every contact becomes a lead. The AI follows your playbook to re-engage them — and you can reach out with one click.", hover: "group-hover:scale-110", viz: <LeadScoreViz /> },
+              { icon: "target",      color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Leads, captured & followed up", desc: "Every contact becomes a lead. The AI follows your playbook to re-engage them, and you can reach out with one click.", hover: "group-hover:scale-110", viz: <LeadScoreViz /> },
             ].map((card, i) => (
               <div key={card.title}
                 className={`bento rounded-[2rem] p-7 flex flex-col group overflow-hidden ${["reveal-r","reveal","reveal-l","reveal","reveal-r"][i]}`}
@@ -972,15 +972,15 @@ const Index = () => {
                 The sale isn't over when the chat goes quiet
               </h2>
               <p className="text-base leading-relaxed mb-6" style={{ color: "#667085" }}>
-                Most interested customers don't buy on the first message — they compare, get
+                Most interested customers don't buy on the first message. They compare, get
                 distracted, and forget. OctaDezx captures every lead automatically and follows
                 up the way <strong className="text-slate-900">you</strong> would.
               </p>
               <ul className="space-y-4">
                 {[
-                  ["playbook", "menu_book", "Your follow-up playbook", "Write plain-language rules — “if someone abandons mid-order, remind them their size is reserved” — and the AI applies them in every conversation, in the customer's language."],
+                  ["playbook", "menu_book", "Your follow-up playbook", "Write plain-language rules like “if someone abandons mid-order, remind them their size is reserved” and the AI applies them in every conversation, in the customer's language."],
                   ["capture", "person_add", "Automatic lead capture", "Every customer who shares a name or email becomes a lead in your dashboard, with the full conversation attached."],
-                  ["outreach", "send", "One-click outreach", "Re-engage quiet leads from the dashboard — your message lands directly in their existing chat thread, not a cold email they'll ignore."],
+                  ["outreach", "send", "One-click outreach", "Re-engage quiet leads from the dashboard. Your message lands directly in their existing chat thread, not a cold email they'll ignore."],
                 ].map(([key, icon, title, desc]) => (
                   <li key={key} className="flex items-start gap-4">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,71,0.08)" }}>
@@ -1000,10 +1000,10 @@ const Index = () => {
               <div className="glass-strong rounded-[2rem] p-6 sm:p-8 space-y-4">
                 <div className="label text-[9px] text-slate-400 mb-2">A lead's journey, on autopilot</div>
                 {[
-                  { time: "Tue 10:42", icon: "chat", tone: "#1d4ed8", text: "Diego asks about Chelsea boots, size 44 — doesn't order." },
-                  { time: "Tue 10:44", icon: "person_add", tone: "#7c3aed", text: "Lead captured: Diego L. · diego@… — visible in your dashboard." },
+                  { time: "Tue 10:42", icon: "chat", tone: "#1d4ed8", text: "Diego asks about Chelsea boots, size 44, but doesn't order." },
+                  { time: "Tue 10:44", icon: "person_add", tone: "#7c3aed", text: "Lead captured: Diego L. · diego@… now visible in your dashboard." },
                   { time: "Wed 09:00", icon: "send", tone: "#000047", text: "Follow-up per your playbook: “Still interested? Your size is reserved until Friday.”" },
-                  { time: "Wed 11:12", icon: "check_circle", tone: "#16a34a", text: "Order #OD-2051 confirmed — $189, payment verified." },
+                  { time: "Wed 11:12", icon: "check_circle", tone: "#16a34a", text: "Order #OD-2051 confirmed: $189, payment verified." },
                 ].map((step, i, arr) => (
                   <div key={step.time} className="flex gap-4">
                     <div className="flex flex-col items-center">
@@ -1073,7 +1073,7 @@ const Index = () => {
             <AmbientVideo
               src="/media/loop-workflow.mp4"
               poster="/media/loop-workflow-poster.webp"
-              label="Import your catalogue, train the AI, connect channels — animated walkthrough"
+              label="Import your catalogue, train the AI, connect channels: animated walkthrough"
               className="w-full block"
             />
           </div>
@@ -1092,7 +1092,7 @@ const Index = () => {
               A workspace your team will actually enjoy
             </h2>
             <p className="max-w-2xl mx-auto text-base" style={{ color: "#667085" }}>
-              This is the exact dashboard you get after sign-up — conversations, orders,
+              This is the exact dashboard you get after sign-up: conversations, orders,
               analytics and AI training, all in one calm place.
             </p>
           </div>
@@ -1118,16 +1118,16 @@ const Index = () => {
                 Run your business from inside Claude
               </h2>
               <p className="text-base leading-relaxed mb-6" style={{ color: "rgba(255,255,255,0.75)" }}>
-                OctaDezx ships a native <strong className="text-white">MCP (Model Context Protocol) server</strong> —
-                connect Claude to your business at <code className="text-xs px-2 py-1 rounded-md" style={{ background: "rgba(255,255,255,0.1)", color: "#b4c5ff" }}>octadezx.com/mcp</code> and
+                OctaDezx ships a native <strong className="text-white">MCP (Model Context Protocol) server</strong>.
+                Connect Claude to your business at <a href="/mcp" target="_blank" rel="noopener noreferrer" className="text-xs px-2 py-1 rounded-md hover:underline" style={{ background: "rgba(255,255,255,0.1)", color: "#b4c5ff" }}>octadezx.com/mcp</a> and
                 manage everything in plain language. No dashboard tab required.
               </p>
               <ul className="space-y-3 mb-8">
                 {[
-                  "“Any customers waiting on us?” — Claude lists escalated chats with context",
-                  "“Reply to Sofia that her refund was processed” — sent into the live conversation",
-                  "“Add this to the knowledge base so it never escalates again” — the AI learns it instantly",
-                  "Check orders, update products and review conversations — all from Claude",
+                  "“Any customers waiting on us?” and Claude lists escalated chats with context",
+                  "“Reply to Sofia that her refund was processed” goes straight into the live conversation",
+                  "“Add this to the knowledge base so it never escalates again” and the AI learns it instantly",
+                  "Check orders, update products and review conversations, all from Claude",
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-3 text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
                     <MI name="check_circle" className="text-base flex-shrink-0 mt-[1px]" style={{ color: "#4ade80" }} />
@@ -1136,7 +1136,8 @@ const Index = () => {
                 ))}
               </ul>
               <p className="text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
-                Works with claude.ai connectors and Claude Code · Secured with OAuth — you approve access, revoke anytime
+                Works with claude.ai connectors and Claude Code · Secured with OAuth, you approve access and can revoke anytime ·
+                Included in the free trial, a subscription keeps it active afterwards
               </p>
             </div>
 
@@ -1245,25 +1246,29 @@ const Index = () => {
               From solo founders to enterprise teams
             </h2>
             <p className="max-w-2xl mx-auto text-base" style={{ color: "#667085" }}>
-              The dashboard adapts to how your business actually works — a restaurant gets menus
+              The dashboard adapts to how your business actually works. A restaurant gets menus
               and reservations, an agency gets lead capture, a store gets orders and shipments.
               A restaurant never sees "Shipments". Same 10-minute setup for everyone.
             </p>
           </div>
           <div className="stagger grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             {[
-              { icon: "storefront",        label: "E-commerce",       desc: "Catalogue, orders, shipments & invoices" },
-              { icon: "store",             label: "Retail stores",    desc: "Stock questions, locations & hours" },
-              { icon: "restaurant",        label: "Restaurants",      desc: "Menus, food orders & reservations" },
-              { icon: "work",              label: "Agencies",         desc: "Service enquiries & lead qualification" },
-              { icon: "cloud",             label: "SaaS & software",  desc: "Plan questions, support & demos" },
-              { icon: "stethoscope",       label: "Clinics",          desc: "Services, hours & appointment requests" },
-              { icon: "school",            label: "Education",        desc: "Programs, fees & admissions" },
-              { icon: "account_balance",   label: "Finance",          desc: "Compliant service info & hand-offs" },
-              { icon: "home_work",         label: "Real estate",      desc: "Listings & viewing requests" },
-              { icon: "flight",            label: "Travel",           desc: "Packages, bookings & itineraries" },
-              { icon: "domain",            label: "Enterprise",       desc: "Multi-department routing at scale" },
-              { icon: "handyman",          label: "Local services",   desc: "Quotes, service areas & scheduling" },
+              { icon: "storefront",        label: "E-commerce",           desc: "Catalogue, orders, shipments & invoices" },
+              { icon: "store",             label: "Retail stores",        desc: "Stock questions, locations & hours" },
+              { icon: "restaurant",        label: "Restaurants",          desc: "Menus, food orders & reservations" },
+              { icon: "work",              label: "Agencies",             desc: "Service enquiries & lead qualification" },
+              { icon: "cloud",             label: "SaaS & software",      desc: "Plan questions, support & demos" },
+              { icon: "stethoscope",       label: "Clinics & healthcare", desc: "Services, hours & appointment requests" },
+              { icon: "school",            label: "Education",            desc: "Programs, fees & admissions" },
+              { icon: "account_balance",   label: "Banks & finance",      desc: "Compliant service info & secure hand-offs" },
+              { icon: "home_work",         label: "Real estate agencies", desc: "Listings, valuations & viewing requests" },
+              { icon: "flight",            label: "Travel & tourism",     desc: "Packages, bookings & itineraries" },
+              { icon: "domain",            label: "Enterprise",           desc: "Multi-department routing at scale" },
+              { icon: "handyman",          label: "Local services",       desc: "Quotes, service areas & scheduling" },
+              { icon: "hotel",             label: "Hotels & hospitality", desc: "Rooms, rates & reservation requests" },
+              { icon: "directions_car",    label: "Automotive",           desc: "Vehicle stock, test drives & servicing" },
+              { icon: "local_shipping",    label: "Logistics & couriers", desc: "Tracking, coverage & delivery quotes" },
+              { icon: "content_cut",       label: "Beauty & salons",      desc: "Services, prices & appointment booking" },
             ].map((b) => (
               <div key={b.label} className="glass rounded-2xl p-5 transition-all hover:-translate-y-1 hover:shadow-lg">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style={{ background: "rgba(0,0,71,0.08)" }}>
@@ -1371,7 +1376,7 @@ const Index = () => {
             </p>
             <p className="max-w-xl mx-auto text-sm mt-3" style={{ color: "#98a2b3" }}>
               Business owners: after setup you get the same kind of link as your own
-              test drive — open it any time to see exactly how your AI handles customers.
+              test drive. Open it any time to see exactly how your AI handles customers.
             </p>
           </div>
 
@@ -1387,7 +1392,7 @@ const Index = () => {
               />
               <div className="absolute bottom-0 left-0 right-0 p-5"
                 style={{ background: "linear-gradient(to top, rgba(2,6,23,0.55), transparent)" }}>
-                <p className="text-white text-sm font-semibold">This is what your customers see — instant, polite, always on.</p>
+                <p className="text-white text-sm font-semibold">This is what your customers see: instant, polite, always on.</p>
               </div>
             </div>
 
@@ -1498,9 +1503,9 @@ const Index = () => {
               { q: "Which channels does the AI customer service agent cover?", a: "WhatsApp, Instagram, Facebook, Shopify and your website widget out of the box, plus 50+ integrations, all answered from one place in your customers' own language." },
               { q: "Does it take orders, not just answer questions?", a: "Yes. Beyond support, OctaDezx confirms and places orders for you. Every price and total is verified on our servers against your catalogue, so customers are always charged the correct amount." },
               { q: "How fast can I go live?", a: "Under 10 minutes. Paste a storefront URL to import your catalogue, add your policies and FAQs, connect a channel, and your AI customer care agent is live." },
-              { q: "Can OctaDezx follow up with customers and leads?", a: "Yes. Every customer who shares contact details becomes a lead in your dashboard. You write a follow-up playbook in plain language and the AI applies it in every conversation — you can also send one-click follow-ups that land directly in the customer's existing chat thread." },
-              { q: "What is the OctaDezx MCP server for Claude?", a: "OctaDezx ships a native Model Context Protocol (MCP) server at octadezx.com/mcp. Connect it to Claude and manage your business in plain language: list escalated chats, read conversations, reply to customers, check orders, update products and teach the knowledge base — secured with OAuth." },
-              { q: "What types and sizes of business does it work for?", a: "Everything from solo founders to enterprise teams: e-commerce, retail, restaurants, agencies, SaaS, clinics, education, finance, real estate, travel and local services. The dashboard adapts to each type — a restaurant gets menus and reservations, a store gets orders and shipments." },
+              { q: "Can OctaDezx follow up with customers and leads?", a: "Yes. Every customer who shares contact details becomes a lead in your dashboard. You write a follow-up playbook in plain language and the AI applies it in every conversation. You can also send one-click follow-ups that land directly in the customer's existing chat thread." },
+              { q: "What is the OctaDezx MCP server for Claude?", a: "OctaDezx ships a native Model Context Protocol (MCP) server at octadezx.com/mcp. Connect it to Claude and manage your business in plain language: list escalated chats, read conversations, reply to customers, check orders, update products and teach the knowledge base. Secured with OAuth, and included in the free trial." },
+              { q: "What types and sizes of business does it work for?", a: "Everything from solo founders to enterprise teams: e-commerce, retail, restaurants, agencies, SaaS, clinics, banks and finance, education, real estate agencies, travel, hotels and local services. The dashboard adapts to each type, so a restaurant gets menus and reservations while a store gets orders and shipments." },
               { q: "Is there a free trial?", a: "Yes, a 24-hour free trial with full access to every feature. No credit card required." },
             ].map((f) => (
               <div key={f.q} className="glass rounded-2xl p-6">
