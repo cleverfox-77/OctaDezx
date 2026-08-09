@@ -88,8 +88,129 @@ One inbox, many channels. Every channel feeds the same AI agent and the same con
 - Booking and ordering on the call: the voice assistant completes the job while still on the line rather than only describing it. It takes appointment bookings, collecting the name, day, time and what the appointment is for, and reads the details back before confirming. It takes orders the same way, restricted to products in the business's own catalogue, reading the whole order back before it is confirmed. Both land in the same dashboard as bookings and orders taken over chat
 - Voice persona and owner training: the assistant is given a name, a job title and a manner, and is trained with plain-English instructions written by the owner. Inbound and outbound calls have separate instructions, because answering someone who rang the business and ringing someone yourself are different jobs. Outbound calls have their own opening line, and each individual queued call can carry its own reason for calling. Owners control whether the assistant states that it is automated, and whether outbound calls offer a spoken opt-out
 - Voice notes: audio messages on WhatsApp, Facebook Messenger, Instagram and Telegram are transcribed and answered in the same thread
-- More than 50 integrations are listed in the dashboard, including CRM, helpdesk and courier platforms
+- 96 integrations in total, listed one by one in the directory section below and at https://octadezx.com/integrations
 
+## Full integration directory (96 integrations)
+
+Every platform OctaDezx can connect, by category. The live directory is at
+https://octadezx.com/integrations. All of them are available on every plan:
+plans differ on volume, team seats and support, never on which integrations
+a business is allowed to use. Each connection uses the business's own
+credentials for that platform, entered once in the dashboard.
+
+### Built in (6)
+Channels that are part of OctaDezx. Nothing to connect, they work the moment you sign up.
+- Website chat widget: A script tag on your site. The AI answers there with your catalogue and policies.
+- Shareable chat link: A public page you can send any customer, or put in a bio. No install, no widget.
+- Phone number: Your own number, answered in real time by the AI. Calls in and out, voicemail with transcripts.
+- Claude and MCP: Connect OctaDezx to Claude and run your customer care from a conversation.
+- REST API: Every object in the dashboard, reachable with an API key.
+- Webhooks: Get told when an order, a booking or an escalation happens.
+
+### Messaging and social (10)
+Your customers keep using the app they already have. The AI answers in the same thread.
+- WhatsApp: Serve 2B+ users directly in WhatsApp
+- Facebook Messenger: Automate conversations on your Facebook Page
+- Instagram DM: Reply to Instagram Direct Messages with AI
+- Telegram: Deploy an AI-powered Telegram bot in minutes
+- Viber: Reach Viber's 1B+ users with AI chat
+- LINE: Connect with LINE's 200M+ users in Asia
+- Twitter / X DM: Auto-reply to Twitter/X Direct Messages
+- WeChat: Automate WeChat Official Account messages
+- Discord: AI-powered slash commands for your Discord server
+- Slack: Deploy AI in your Slack workspace
+
+### E-commerce (10)
+Your catalogue, prices and stock, synced in so the AI answers from what you really sell.
+- Shopify: Sync products, orders and customers from Shopify
+- WooCommerce: Connect your WordPress/WooCommerce store
+- Amazon Seller: Sync Amazon listings, orders and FBA inventory
+- Etsy: Manage your Etsy shop orders and listings
+- eBay: Sync eBay listings and orders automatically
+- BigCommerce: Connect your BigCommerce storefront
+- Magento / Adobe Commerce: Sync your Magento store catalogue and orders
+- Lazada: Manage Lazada orders across Southeast Asia
+- Shopee: Automate Shopee store management and chat
+- Tokopedia: Connect your Tokopedia seller account
+
+### CRM and helpdesk (6)
+Conversations, contacts and tickets flow into the system your team already lives in.
+- HubSpot: Sync contacts, deals and support tickets
+- Salesforce CRM: Connect your Salesforce org for full CRM sync
+- Zoho CRM: Sync leads, contacts and deals from Zoho CRM
+- Zendesk: Create and update support tickets automatically
+- Freshdesk: Manage support tickets through Freshdesk
+- Intercom: Sync Intercom conversations and contacts
+
+### Payments (3)
+The AI knows when a payment landed, was refunded or was disputed.
+- Stripe: Track payments, refunds and subscription events
+- PayPal: Receive PayPal payment and dispute notifications
+- Square: Sync Square POS orders and payment events
+
+### Shipping and couriers (61)
+Book a pickup, print a label and answer 'where is my order' with a real tracking status, worldwide.
+- EasyPost: 100+ couriers worldwide via one API
+- Shippo: US-focused shipping aggregator
+- AfterShip: Universal tracker, 1000+ carriers
+- ShipRocket: India aggregator, 17+ couriers
+- Pathao Courier: Bangladesh's leading delivery network
+- SteadFast Courier: BD courier with COD support
+- RedX: Tech-driven BD logistics
+- Paperfly: Pan-Bangladesh distribution
+- eCourier: Bangladesh nationwide delivery
+- Sundarban Courier: Long-standing BD logistics provider
+- Delhivery: India's largest supply chain network
+- Blue Dart: Premium courier for India and SAARC
+- DTDC: Pan-India express services
+- Ekart Logistics: Flipkart's logistics arm
+- Xpressbees: Fast-growing Indian logistics
+- TCS Courier: Pakistan's premier courier
+- Leopards Courier: Pakistan nationwide delivery
+- M&P Express: Pakistan logistics and cargo
+- Ninja Van: Tech-enabled SEA logistics
+- J&T Express: Asia-wide express delivery
+- Lalamove: On-demand same-day delivery
+- LBC Express: Philippines #1 courier
+- Kerry Express: Thailand and SEA delivery network
+- Pos Laju: Malaysia's national courier
+- SF Express: China's premium express
+- Cainiao: Alibaba's logistics network
+- ZTO Express: Major Chinese courier
+- YTO Express: China nationwide delivery
+- Yamato Transport: Japan's largest courier (Kuroneko)
+- CJ Logistics: South Korea's leading logistics
+- DHL Express: Global express shipping
+- FedEx: Worldwide overnight and express
+- UPS: Global package delivery
+- USPS: United States Postal Service
+- TNT (FedEx): European express network
+- GLS: European parcel logistics
+- PostNL: Netherlands postal and parcels
+- DPD: European road network parcels
+- Evri (Hermes): UK consumer parcels
+- Royal Mail: UK national postal service
+- Colissimo: La Poste France parcels
+- Bpost: Belgium's national post
+- Deutsche Post / DHL Paket: Germany's national post
+- Correos: Spain's postal service
+- Poste Italiane: Italy's national post
+- Canada Post: Canada's national postal service
+- Correios: Brazil's national postal service
+- Estafeta: Mexico's express courier
+- OnTrac: US West Coast express delivery
+- DHL eCommerce: Global e-commerce logistics
+- Australia Post: Australia's postal and parcels
+- StarTrack: Australia premium express
+- Aramex Australia: Australia road express
+- NZ Post: New Zealand postal service
+- Aramex: Middle East and global logistics
+- Naqel Express: Saudi Arabia and Gulf delivery
+- SMSA Express: Saudi Arabia express courier
+- DPD Africa: African road network parcels
+- PostNet: Africa and USA pack-and-ship
+- CDEK: Russia and CIS express delivery
+- Russian Post: Russia's national postal service
 ## Claude and MCP integration
 
 OctaDezx ships a native Model Context Protocol (MCP) server at https://octadezx.com/mcp. Business owners connect it to Claude (claude.ai custom connectors or Claude Code) through a standard OAuth flow. Once connected, from inside Claude an owner can:
