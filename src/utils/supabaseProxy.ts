@@ -25,7 +25,7 @@ const getEnvVar = (key: string): string => {
 };
 
 // The anon key is intentionally public (Supabase design); RLS policies protect data.
-// No hardcoded fallback — if the env var is missing the build should fail loudly.
+// No hardcoded fallback, if the env var is missing the build should fail loudly.
 const SUPABASE_ANON_KEY = getEnvVar('VITE_SUPABASE_ANON_KEY');
 
 // Validate that a string is a proper UUID (v4) before using it in API paths
@@ -67,7 +67,7 @@ export async function directSupabaseRequest(method: string, path: string, body?:
   }
 
   // Authenticate as the signed-in (incl. anonymous) user when possible so RLS
-  // policies scoped to auth.uid() apply — e.g. guests reading/writing only
+  // policies scoped to auth.uid() apply, e.g. guests reading/writing only
   // THEIR chat session. Falls back to the bare anon key pre-sign-in.
   let accessToken = SUPABASE_ANON_KEY;
   try {

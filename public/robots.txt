@@ -58,3 +58,7 @@ Allow: /
 
 # Sitemap
 Sitemap: https://octadezx.com/sitemap.xml
+
+# LLM guidance (AI SEO / GEO): machine-readable product facts for AI assistants
+# https://octadezx.com/llms.txt
+# https://octadezx.com/llms-full.txt

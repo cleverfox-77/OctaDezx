@@ -197,7 +197,7 @@ const AuthPage = () => {
           </h2>
           <ul className="space-y-4">
             {[
-              "Live in under 10 minutes — no developers needed",
+              "Live in under 10 minutes, no developers needed",
               "AI answers in 50+ languages, 24/7",
               "Orders verified server-side before they're confirmed",
             ].map((t) => (
@@ -214,7 +214,7 @@ const AuthPage = () => {
               “Our response time went from hours to seconds and our online sales have
               grown without us adding a single new hire.”
             </blockquote>
-            <figcaption className="text-xs text-white/50 mt-2 font-semibold">Thomas Pini — CEO, Pini Parma</figcaption>
+            <figcaption className="text-xs text-white/50 mt-2 font-semibold">Thomas Pini, CEO, Pini Parma</figcaption>
           </figure>
         </div>
 
@@ -233,7 +233,7 @@ const AuthPage = () => {
             <CardDescription>Sign in or create an account to continue</CardDescription>
             {referralCode && (
               <div className="mt-2 text-xs text-green-600 dark:text-green-400 font-medium">
-                Referral code <span className="font-mono bg-green-500/10 px-2 py-0.5 rounded">{referralCode}</span> applied — 10% discount on your subscription
+                Referral code <span className="font-mono bg-green-500/10 px-2 py-0.5 rounded">{referralCode}</span> applied, 10% discount on your subscription
               </div>
             )}
           </CardHeader>

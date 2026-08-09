@@ -1,0 +1,29 @@
+{
+  "name": "octadezx-voice-server",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Real-time voice media server for OctaDezx. Bridges Telnyx media streaming to Deepgram STT, Gemini and streaming TTS.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node22 --format=esm --outfile=dist/index.js --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\"",
+    "start": "node dist/index.js",
+    "dev": "node --watch --experimental-strip-types src/index.ts",
+    "typecheck": "tsc --noEmit",
+    "pretest": "esbuild src/audio.ts src/paced.ts src/catalog.ts src/llm.ts src/config.ts src/outbound.ts src/carrierSignature.ts src/texml.ts src/tts/index.ts src/tts/deepgram.ts src/tts/google.ts --outdir=dist-test --platform=node --format=esm --target=node22",
+    "test": "node --test test/unit.test.mjs",
+    "probe": "node scripts/latency-probe.mjs",
+    "telnyx:check": "node scripts/telnyx-check.mjs"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.18.1",
+    "@types/ws": "^8.5.13",
+    "esbuild": "^0.25.9",
+    "typescript": "^5.9.2"
+  }
+}

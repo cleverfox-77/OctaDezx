@@ -4,11 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/components/ui/use-toast";
 import { MessageSquare, AlertTriangle, CheckCircle, Clock, Send, User, Image as ImageIcon, X, Globe, Facebook, Instagram, Twitter, Youtube, Linkedin, Search, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
+import ChatTranscript from "@/components/ChatTranscript";
 
 interface ChatSession {
   id: string;
@@ -308,7 +308,7 @@ const ChatSessions = ({ businessId, filter }: ChatSessionsProps) => {
         <h3 className="text-lg font-semibold">{escalatedOnly ? "Escalated Chats" : "Chat Sessions"}</h3>
         <p className="text-sm text-muted-foreground">
           {escalatedOnly
-            ? "Conversations your AI handed over because it couldn't answer or the customer asked for a human. Reply here — the customer sees your messages in their chat."
+            ? "Conversations your AI handed over because it couldn't answer or the customer asked for a human. Reply here, the customer sees your messages in their chat."
             : "Monitor customer conversations and handle escalated cases"}
         </p>
       </div>
@@ -320,7 +320,7 @@ const ChatSessions = ({ businessId, filter }: ChatSessionsProps) => {
               <>
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
                 <p className="text-muted-foreground">
-                  No escalated chats — your AI is handling everything on its own. 🎉
+                  No escalated chats, your AI is handling everything on its own. 🎉
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   When the AI can't answer, the chat appears here and you get an email notification.
@@ -419,44 +419,11 @@ const ChatSessions = ({ businessId, filter }: ChatSessionsProps) => {
                           </DialogDescription>
                         </DialogHeader>
                         
-                        <ScrollArea className="h-[60vh] pr-4">
-                          <div className="space-y-4 py-4">
-                            {selectedSession?.messages.map((message) => (
-                              <div
-                                key={message.id}
-                                className={`flex ${
-                                  message.sender_type === 'customer' ? 'justify-start' : 'justify-end'
-                                }`}
-                              >
-                                <div
-                                  className={`max-w-[70%] rounded-lg p-3 break-words ${
-                                    message.sender_type === 'customer'
-                                      ? 'bg-muted'
-                                      : message.sender_type === 'ai'
-                                      ? 'bg-primary text-primary-foreground'
-                                      : 'bg-secondary text-secondary-foreground'
-                                  }`}
-                                >
-                                  <div className="text-xs opacity-70 mb-1 capitalize">
-                                    {message.sender_type === 'customer' ? selectedSession?.customer_name || 'Customer' : message.sender_type === 'ai' ? 'AI Assistant' : 'You'}
-                                  </div>
-                                  <div className="text-sm">{message.content}</div>
-                                  {message.image_url && (
-                                    <img
-                                      src={message.image_url}
-                                      alt="Message attachment"
-                                      className="mt-2 max-w-full rounded border"
-                                    />
-                                  )}
-                                  <div className="text-xs opacity-70 mt-1 text-right">
-                                    {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                                  </div>
-                                </div>
-                              </div>
-                            ))}
-                            <div ref={messagesEndRef} />
-                          </div>
-                        </ScrollArea>
+                        <ChatTranscript
+                          messages={(selectedSession?.messages ?? []) as any}
+                          customerName={selectedSession?.customer_name}
+                          footer={<div ref={messagesEndRef} />}
+                        />
                         
                         <div className="mt-auto pt-4 border-t">
                           {selectedSession?.status === 'manual' ? (

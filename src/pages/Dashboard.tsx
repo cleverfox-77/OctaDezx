@@ -6,9 +6,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import {
   LogOut, User as UserIcon, CreditCard,
-  ExternalLink, Menu, ChevronRight, Building2, X, Search,
+  ExternalLink, Menu, ChevronRight, Building2, X, Search, SlidersHorizontal, Loader2,
 } from "lucide-react";
 import {
   CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList,
@@ -16,6 +17,7 @@ import {
 import { LogoIcon } from "@/components/ui/Logo";
 import { useToast } from "@/components/ui/use-toast";
 import { useSubscription } from "@/hooks/useSubscription";
+import { PLAN_LABELS, priceLabel } from "@/lib/plans";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 import { DailyUsage } from "@/components/DailyUsage";
 import BusinessSetup from "@/components/BusinessSetup";
@@ -23,7 +25,9 @@ import DashboardOverview from "@/components/DashboardOverview";
 import LeadsFollowups from "@/components/LeadsFollowups";
 import ProductCatalogWithScraper from "@/components/ProductCatalogWithScraper";
 import ChatSessions from "@/components/ChatSessions";
+import VoiceCenter from "@/components/voice/VoiceCenter";
 import KnowledgeBase from "./KnowledgeBase";
+import Appointments from "@/components/Appointments";
 import Analytics from "./Analytics";
 import UserProfile from "@/components/UserProfile";
 import BusinessSettings from "@/components/BusinessSettings";
@@ -35,31 +39,36 @@ import Invoices from "@/components/Invoices";
 import InvoiceSettings from "@/components/InvoiceSettings";
 import AiTraining from "@/components/AiTraining";
 import McpConnect from "@/components/McpConnect";
+import TeamSection from "@/components/team/TeamSection";
 import { VideoPlayer } from "@/components/VideoPlayer";
-import { navForType, sectionLabel, SECTION_DESCRIPTIONS, type SectionId } from "@/lib/businessTypes";
+import { navForBusiness, sectionLabel, SECTION_DESCRIPTIONS, defaultFeatures, type SectionId } from "@/lib/businessTypes";
+import FeatureSelector from "@/components/FeatureSelector";
 import { type Database } from "@/integrations/supabase/types";
 
-type Business = Database["public"]["Tables"]["businesses"]["Row"];
+// enabled_features is a new column; the generated Row type may not include it yet.
+type Business = Database["public"]["Tables"]["businesses"]["Row"] & { enabled_features?: string[] | null };
 // Account sections live outside the per-type business nav.
 type AccountSectionId = "profile" | "billing";
 type ActiveSection = AccountSectionId | SectionId;
 
 // ── Plan metadata ─────────────────────────────────────────────────
-const PLAN_BADGES: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
-  trial: { label: "Trial", variant: "secondary" },
-  free: { label: "Free", variant: "outline" },
-  starter: { label: "Starter", variant: "default" },
-  pro: { label: "Pro", variant: "default" },
-  enterprise: { label: "Enterprise", variant: "default" },
-  appsumo_ltd: { label: "Lifetime", variant: "default" },
-};
+// Names and prices come from src/lib/plans.ts; only the badge styling is local.
+const PLAN_BADGES: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> =
+  Object.fromEntries(
+    Object.entries(PLAN_LABELS).map(([key, label]) => [
+      key,
+      { label, variant: key === "trial" ? "secondary" : key === "free" ? "outline" : "default" },
+    ]),
+  ) as Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }>;
 
 const PLAN_PRICES: Record<string, string> = {
   trial: "Free trial",
   free: "No active plan",
-  starter: "$9/month",
-  pro: "$29/month",
-  enterprise: "$99/month",
+  starter: priceLabel("starter"),
+  pro: priceLabel("pro"),
+  advanced: priceLabel("advanced"),
+  enterprise: priceLabel("enterprise"),
+  legacy_starter: `${priceLabel("legacy_starter")} (no longer sold)`,
   appsumo_ltd: "$230 one-time",
 };
 
@@ -86,6 +95,42 @@ const Dashboard = () => {
   const [escalatedCount, setEscalatedCount] = useState(0);
   const [cmdOpen, setCmdOpen] = useState(false);
 
+  // "Manage features", add/remove optional dashboard tools after onboarding.
+  const [featuresOpen, setFeaturesOpen] = useState(false);
+  const [draftFeatures, setDraftFeatures] = useState<SectionId[]>([]);
+  const [savingFeatures, setSavingFeatures] = useState(false);
+
+  const openFeatures = () => {
+    if (!selectedBusiness) return;
+    const current = (selectedBusiness.enabled_features ?? defaultFeatures(selectedBusiness.business_type)) as SectionId[];
+    setDraftFeatures(current);
+    setFeaturesOpen(true);
+  };
+
+  const saveFeatures = async () => {
+    if (!selectedBusiness) return;
+    setSavingFeatures(true);
+    try {
+      // enabled_features isn't in the generated types yet, cast for the update.
+      const db = supabase as unknown as {
+        from: (t: string) => { update: (v: Record<string, unknown>) => { eq: (c: string, v: string) => Promise<{ error: unknown }> } };
+      };
+      const { error } = await db.from("businesses")
+        .update({ enabled_features: draftFeatures })
+        .eq("id", selectedBusiness.id);
+      if (error) throw error;
+      const updated = { ...selectedBusiness, enabled_features: draftFeatures };
+      setSelectedBusiness(updated);
+      setBusinesses((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+      setFeaturesOpen(false);
+      toast({ title: "Tools updated", description: "Your dashboard now shows the tools you selected." });
+    } catch {
+      toast({ title: "Error", description: "Could not update your tools. Please try again.", variant: "destructive" });
+    } finally {
+      setSavingFeatures(false);
+    }
+  };
+
   // ⌘K / Ctrl+K command palette
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -98,10 +143,11 @@ const Dashboard = () => {
     return () => document.removeEventListener("keydown", down);
   }, []);
 
-  // Business-tools nav, tailored to the selected business's type.
+  // Business-tools nav, tailored to the selected business's type AND the
+  // optional tools the owner chose to enable (legacy null ⇒ show all).
   const businessNav = useMemo(
-    () => navForType(selectedBusiness?.business_type),
-    [selectedBusiness?.business_type],
+    () => navForBusiness(selectedBusiness?.business_type, selectedBusiness?.enabled_features),
+    [selectedBusiness?.business_type, selectedBusiness?.enabled_features],
   );
 
   // If the active business section doesn't exist for the newly selected type
@@ -118,6 +164,41 @@ const Dashboard = () => {
     if (user?.id) loadBusinesses();
     else setLoading(false);
   }, [user]);
+
+  // Team invitations arrive as /dashboard?invite=<token>. Redeem it here rather
+  // than on its own route: ProtectedRoute bounces signed-out visitors to /auth
+  // without keeping the query string, so a dedicated page would lose the token
+  // for exactly the people most likely to need it (those without an account).
+  // The token is stripped from the URL immediately either way, so it never
+  // lingers in history or in a copied address.
+  useEffect(() => {
+    if (!user?.id) return;
+    const token = new URLSearchParams(window.location.search).get("invite");
+    if (!token) return;
+
+    window.history.replaceState({}, "", window.location.pathname);
+
+    (async () => {
+      const db = supabase as unknown as {
+        rpc: (fn: string, args: Record<string, unknown>) =>
+          Promise<{ data: unknown; error: { message: string } | null }>;
+      };
+      const { data, error } = await db.rpc("accept_team_invitation", { p_token: token });
+      if (error) {
+        toast({ title: "Could not join the team", description: error.message, variant: "destructive" });
+        return;
+      }
+      const joined = (data as { business_name: string; role: string }[])?.[0];
+      toast({
+        title: "You are on the team",
+        description: joined
+          ? `You now have access to ${joined.business_name} as ${joined.role === "admin" ? "an admin" : "an agent"}.`
+          : "Your invitation was accepted.",
+      });
+      await loadBusinesses();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id]);
 
   // Badge on the "Escalated Chats" nav item so handed-off customers aren't missed.
   useEffect(() => {
@@ -138,8 +219,12 @@ const Dashboard = () => {
   const loadBusinesses = async () => {
     if (!user?.id) { setLoading(false); return; }
     try {
+      // No owner_id filter: since teams shipped, a business is visible to
+      // everyone on its team, and RLS ("Team members can view their
+      // businesses") is what decides that. Filtering by owner_id here would
+      // hide the business from every invited member no matter what RLS allows.
       const { data, error } = await supabase
-        .from("businesses").select("*").eq("owner_id", user.id).order("created_at", { ascending: false });
+        .from("businesses").select("*").order("created_at", { ascending: false });
       if (error) throw error;
       const businessData = (data as Business[]) || [];
       setBusinesses(businessData);
@@ -308,6 +393,13 @@ const Dashboard = () => {
               </button>
             ))}
           </div>
+          <button
+            onClick={() => { setMobileMenuOpen(false); openFeatures(); }}
+            className="side-item w-full flex items-center gap-3 px-3 py-2.5 mt-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground border border-dashed border-muted-foreground/25 transition-colors"
+          >
+            <SlidersHorizontal className="h-4 w-4 flex-shrink-0" />
+            <span>Manage tools</span>
+          </button>
         </div>
       )}
 
@@ -365,7 +457,7 @@ const Dashboard = () => {
                   </CancelSubscriptionDialog>
                 )}
                 {planType === "appsumo_ltd" && (
-                  <Badge variant="secondary" className="text-xs self-center">Lifetime — No cancellation needed</Badge>
+                  <Badge variant="secondary" className="text-xs self-center">Lifetime, No cancellation needed</Badge>
                 )}
               </div>
             </div>
@@ -387,7 +479,7 @@ const Dashboard = () => {
       </div>
     );
 
-    // Business sections — require a selected business
+    // Business sections, require a selected business
     if (!selectedBusiness) {
       return <BusinessSetup onBusinessCreated={loadBusinesses} />;
     }
@@ -421,14 +513,24 @@ const Dashboard = () => {
       case "analytics": return <Analytics businessId={selectedBusiness.id} />;
       case "products": return <ProductCatalogWithScraper businessId={selectedBusiness.id} />;
       case "chats": return <ChatSessions businessId={selectedBusiness.id} />;
+      case "voice": return <VoiceCenter businessId={selectedBusiness.id} />;
       case "escalated": return <ChatSessions businessId={selectedBusiness.id} filter="escalated" />;
       case "leads": return <LeadsFollowups business={selectedBusiness} onBusinessUpdated={handleSettingsUpdated} />;
+      case "appointments": return <Appointments businessId={selectedBusiness.id} />;
       case "api-keys": return <ApiKeys businessId={selectedBusiness.id} />;
       case "orders": return <Orders businessId={selectedBusiness.id} />;
       case "shipments": return <Shipments businessId={selectedBusiness.id} />;
       case "invoices": return <Invoices businessId={selectedBusiness.id} />;
       case "invoice-settings": return <InvoiceSettings business={selectedBusiness} onSettingsUpdated={handleSettingsUpdated} />;
       case "integrations": return <PlatformIntegrations businessId={selectedBusiness.id} />;
+      case "team": return (
+        <TeamSection
+          businessId={selectedBusiness.id}
+          businessName={selectedBusiness.name}
+          planType={planType}
+          onNavigate={navigate}
+        />
+      );
       case "knowledge-base": return <KnowledgeBase businessId={selectedBusiness.id} />;
       case "tutorial": return (
         <div className="space-y-6">
@@ -439,7 +541,7 @@ const Dashboard = () => {
             <CardContent className="pt-5">
               <h3 className="font-semibold text-base mb-1">Getting started with OctaDezx</h3>
               <p className="text-sm text-muted-foreground">
-                A full walkthrough of setup, training and going live — about 5 minutes.
+                A full walkthrough of setup, training and going live, about 5 minutes.
               </p>
             </CardContent>
           </Card>
@@ -450,7 +552,7 @@ const Dashboard = () => {
               ["02", "Import your catalogue", "Add products manually, by CSV or straight from a store URL.", "products"],
               ["03", "Teach it your answers", "Knowledge base articles cut escalations dramatically.", "knowledge-base"],
               ["04", "Test it yourself", "Open your chat link and talk to your own AI like a customer.", "overview"],
-              ["05", "Watch conversations", "Every chat is transcribed — jump in whenever you want.", "chats"],
+              ["05", "Watch conversations", "Every chat is transcribed, jump in whenever you want.", "chats"],
               ["06", "Improve with data", "Analytics shows what customers ask and what converts.", "analytics"],
             ] as [string, string, string, SectionId][]).map(([num, title, desc, target]) => (
               <button key={num} onClick={() => navigate(target)}
@@ -628,6 +730,36 @@ const Dashboard = () => {
         </SheetContent>
       </Sheet>
 
+      {/* ── MANAGE FEATURES DIALOG ── */}
+      <Dialog open={featuresOpen} onOpenChange={setFeaturesOpen}>
+        <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <SlidersHorizontal className="h-5 w-5 text-primary" />
+              Manage your tools
+            </DialogTitle>
+            <DialogDescription>
+              Turn dashboard tools on or off for {selectedBusiness?.name}. Chat Sessions, Train AI, Analytics
+              and Connect to Claude are always included.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-2">
+            <FeatureSelector
+              typeId={selectedBusiness?.business_type}
+              value={draftFeatures}
+              onChange={setDraftFeatures}
+            />
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" onClick={() => setFeaturesOpen(false)} disabled={savingFeatures}>Cancel</Button>
+            <Button onClick={saveFeatures} disabled={savingFeatures} className="press">
+              {savingFeatures && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {savingFeatures ? "Saving…" : "Save tools"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ── BODY ── */}
       <div className="flex-1 flex overflow-hidden">
 
@@ -641,7 +773,7 @@ const Dashboard = () => {
         {/* ── MAIN CONTENT ── */}
         <main className="flex-1 overflow-y-auto">
           {/* key remounts the wrapper per section so every switch gets the
-              same brief enter transition — navigation feels acknowledged */}
+              same brief enter transition, navigation feels acknowledged */}
           <div key={activeSection} className="section-enter container max-w-5xl mx-auto px-4 py-6">
             {/* Page title + purpose on desktop */}
             {currentNavItem && (

@@ -267,7 +267,7 @@ const TOOLS = [
       properties: {
         description: { type: "string", description: "Short business description the AI introduces itself with." },
         policies: { type: "string", description: "Customer-facing policies (returns, cancellations, etc.)." },
-        ai_instructions: { type: "string", description: "How the assistant should behave/talk. Replaces the current instructions — fetch them first if you only want to tweak." },
+        ai_instructions: { type: "string", description: "How the assistant should behave/talk. Replaces the current instructions, so fetch them first if you only want to tweak." },
         details: { type: "object", description: "Training fields merged into type_config, e.g. {\"services_offered\":\"...\",\"pricing_model\":\"...\"}. Use the recommended field names for the business type. Set a field to an empty string to remove it." },
       },
     },
@@ -296,7 +296,7 @@ const TOOLS = [
   },
   {
     name: "get_recent_conversations",
-    description: "Fetch recent customer conversations WITH their messages so you can analyse them for insights — common questions, why chats get escalated, sentiment, recurring complaints, sales opportunities, busy periods, etc. Returns the raw material; do the analysis yourself and summarise for the owner.",
+    description: "Fetch recent customer conversations WITH their messages so you can analyse them for insights: common questions, why chats get escalated, sentiment, recurring complaints, sales opportunities, busy periods, etc. Returns the raw material; do the analysis yourself and summarise for the owner.",
     inputSchema: {
       type: "object",
       properties: {
@@ -354,6 +354,109 @@ const TOOLS = [
       required: ["articleId"],
     },
   },
+
+  // ── Marketing / growth ──────────────────────────────────────────────────────
+  {
+    name: "growth_snapshot",
+    description: "A quick numeric snapshot for growth analysis: business name/type, chat status counts, orders in the last 30 days, total orders, knowledge articles and captured leads. Pair it with get_recent_conversations to reason about what customers ask and where sales leak.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_page_insights",
+    description: "Facebook Page / Instagram reach and engagement plus recent post performance, pulled live from Meta using the page token stored on the business's connected FB/IG integration. Use it to see what content actually performs. Returns a clear error if no Page is connected.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "get_ad_insights",
+    description: "The business's own Meta ad performance (spend, impressions, clicks, CTR, CPC, CPM, reach) for the last 30 days. Requires an ad account linked to the Facebook integration (ad_account_id) and the ads_read permission.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "search_competitor_ads",
+    description: "Search the Meta Ad Library for ads a competitor is currently running: creative, copy and start date only. IMPORTANT: Meta does NOT expose competitor spend/CTR/ROAS for commercial ads, and coverage varies by country. Use this for creative/messaging intelligence, not performance stats.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: { type: "string", description: "Competitor page name or keyword to search." },
+        country: { type: "string", description: "ISO country code to search within (default BD)." },
+        limit: { type: "number", description: "Max ads (default 15, max 40)." },
+      },
+      required: ["query"],
+    },
+  },
+  {
+    name: "create_post",
+    description: "Publish a post to the connected Facebook Page or Instagram account. PUBLISHES PUBLICLY. Always confirm the exact copy (and image) with the owner before calling. Instagram requires an imageUrl.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        platform: { type: "string", enum: ["facebook", "instagram"], description: "Where to post (default facebook)." },
+        message: { type: "string", description: "The post text / caption." },
+        imageUrl: { type: "string", description: "Public image URL. Optional for Facebook, required for Instagram." },
+      },
+      required: ["message"],
+    },
+  },
+  {
+    name: "list_recent_comments",
+    description: "List recent comments on the business's latest Facebook/Instagram posts (comment id, text, author) so the owner can review or reply.",
+    inputSchema: { type: "object", properties: {} },
+  },
+  {
+    name: "reply_to_comment",
+    description: "Post a public reply to a specific Facebook/Instagram comment (get the commentId from list_recent_comments). Confirm the wording with the owner first.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        commentId: { type: "string", description: "The comment id to reply to." },
+        message: { type: "string", description: "The reply text." },
+        platform: { type: "string", enum: ["facebook", "instagram"], description: "Which network the comment is on (default facebook)." },
+      },
+      required: ["commentId", "message"],
+    },
+  },
+
+  // ── Appointments / bookings ─────────────────────────────────────────────────
+  {
+    name: "list_appointments",
+    description: "List this business's appointments (bookings), soonest first. Optionally filter by status.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        status: { type: "string", enum: ["requested", "confirmed", "cancelled", "completed"], description: "Filter by status. Omit for all." },
+        limit: { type: "number", description: "Max appointments (default 30, max 100)." },
+      },
+    },
+  },
+  {
+    name: "book_appointment",
+    description: "Create a confirmed appointment for a customer. Confirm the details with the owner first. startsAt must be ISO 8601.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        customerName: { type: "string", description: "Customer's name." },
+        customerContact: { type: "string", description: "Phone or email." },
+        service: { type: "string", description: "What the appointment is for." },
+        startsAt: { type: "string", description: "ISO 8601 date-time, e.g. 2026-07-25T14:30." },
+        durationMinutes: { type: "number", description: "Length in minutes (default 30)." },
+        notes: { type: "string", description: "Any extra notes." },
+      },
+      required: ["startsAt"],
+    },
+  },
+  {
+    name: "update_appointment",
+    description: "Confirm, cancel, complete or reschedule an appointment. Get the id from list_appointments.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        appointmentId: { type: "string", description: "The appointment UUID." },
+        status: { type: "string", enum: ["requested", "confirmed", "cancelled", "completed"], description: "New status." },
+        startsAt: { type: "string", description: "New ISO 8601 time to reschedule to." },
+      },
+      required: ["appointmentId"],
+    },
+  },
 ];
 
 const clampLimit = (v: unknown, def: number, max: number): number => {
@@ -361,6 +464,27 @@ const clampLimit = (v: unknown, def: number, max: number): number => {
   if (!Number.isFinite(n) || n <= 0) return def;
   return Math.min(Math.floor(n), max);
 };
+
+const GRAPH = "https://graph.facebook.com/v19.0";
+
+// Reuse the Meta page/IG/ad credentials the business already saved on its
+// Facebook or Instagram integration (the same token that powers messaging).
+async function getMetaCreds(supabase: Json, businessId: string): Promise<{
+  token: string; pageId: string; igUserId: string; adAccountId: string;
+} | null> {
+  const { data } = await supabase
+    .from("platform_integrations")
+    .select("platform, credentials")
+    .eq("business_id", businessId)
+    .in("platform", ["facebook", "instagram"]);
+  const rows = (data ?? []) as Array<{ platform: string; credentials: Record<string, string> }>;
+  if (!rows.length) return null;
+  const pick = rows.find((r) => r.credentials?.page_access_token) ?? rows[0];
+  const c = pick.credentials ?? {};
+  const token = c.page_access_token || c.access_token || "";
+  if (!token) return null;
+  return { token, pageId: c.page_id || "", igUserId: c.ig_user_id || "", adAccountId: c.ad_account_id || "" };
+}
 
 // ── Tool dispatch (only reached for subscribed businesses) ───────────────────
 async function runTool(
@@ -718,6 +842,185 @@ async function runTool(
       if (error) return toolText(`Failed to delete article: ${error.message}`, true);
       if (!data) return toolText("Article not found for this business.", true);
       return toolText(`Deleted knowledge base article "${data.title}". The AI will no longer use it.`);
+    }
+
+    // ── Marketing / growth ──────────────────────────────────────────────────
+    case "growth_snapshot": {
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+      const countBy = async (table: string, build: (q: any) => any) =>
+        (await build(supabase.from(table).select("id", { count: "exact", head: true }).eq("business_id", businessId))).count ?? 0;
+      const [biz, active, escalated, resolved, orders30, ordersTotal, articles, leads] = await Promise.all([
+        supabase.from("businesses").select("name, business_type").eq("id", businessId).maybeSingle(),
+        countBy("chat_sessions", (q: any) => q.eq("status", "active")),
+        countBy("chat_sessions", (q: any) => q.eq("status", "escalated")),
+        countBy("chat_sessions", (q: any) => q.eq("status", "resolved")),
+        countBy("orders", (q: any) => q.gte("created_at", since)),
+        countBy("orders", (q: any) => q),
+        countBy("knowledge_base_articles", (q: any) => q),
+        countBy("chat_sessions", (q: any) => q.not("customer_email", "is", null)),
+      ]);
+      return toolJson({
+        business: (biz as any)?.data ?? null,
+        chats: { active, escalated, resolved },
+        orders: { last_30_days: orders30, total: ordersTotal },
+        knowledge_articles: articles,
+        leads_captured: leads,
+        hint: "Call get_recent_conversations to analyse what customers ask; get_page_insights / get_ad_insights for channel performance.",
+      });
+    }
+
+    case "get_page_insights": {
+      const mc = await getMetaCreds(supabase, businessId);
+      if (!mc) return toolText("No Facebook/Instagram Page connected. Connect a Page in Integrations first.", true);
+      const pageId = mc.pageId || "me";
+      const metrics = "page_impressions,page_post_engagements,page_fans,page_daily_follows_unique";
+      const r = await fetch(`${GRAPH}/${pageId}/insights?metric=${metrics}&period=days_28&access_token=${mc.token}`);
+      const j = await r.json();
+      if (j.error) return toolText(`Meta API error: ${j.error.message}`, true);
+      const postFields = encodeURIComponent("message,created_time,insights.metric(post_impressions,post_engaged_users)");
+      const pr = await fetch(`${GRAPH}/${pageId}/posts?fields=${postFields}&limit=10&access_token=${mc.token}`);
+      const pj = await pr.json();
+      return toolJson({ page_insights: j.data ?? [], recent_posts: pj.data ?? (pj.error ? { error: pj.error.message } : []) });
+    }
+
+    case "get_ad_insights": {
+      const mc = await getMetaCreds(supabase, businessId);
+      if (!mc || !mc.adAccountId) return toolText("No ad account linked. Add an `ad_account_id` to your Facebook integration credentials to pull ad performance.", true);
+      const acct = mc.adAccountId.startsWith("act_") ? mc.adAccountId : `act_${mc.adAccountId}`;
+      const fields = "spend,impressions,clicks,ctr,cpc,cpm,reach,actions";
+      const r = await fetch(`${GRAPH}/${acct}/insights?fields=${fields}&date_preset=last_30d&access_token=${mc.token}`);
+      const j = await r.json();
+      if (j.error) return toolText(`Meta Ads API error: ${j.error.message} (needs the ads_read permission).`, true);
+      return toolJson({ ad_insights: j.data ?? [] });
+    }
+
+    case "search_competitor_ads": {
+      const mc = await getMetaCreds(supabase, businessId);
+      if (!mc) return toolText("Connect a Facebook/Instagram Page first (its token is used to query the Ad Library).", true);
+      const terms = String(args?.query ?? "").trim();
+      if (!terms) return toolText("Provide a `query` (a competitor name or keyword).", true);
+      const country = String(args?.country ?? "BD").toUpperCase().replace(/[^A-Z]/g, "").slice(0, 2) || "BD";
+      const limit = clampLimit(args?.limit, 15, 40);
+      const fields = "page_name,ad_creative_bodies,ad_creative_link_titles,ad_creative_link_descriptions,ad_delivery_start_time,ad_snapshot_url,publisher_platforms";
+      const url = `${GRAPH}/ads_archive?search_terms=${encodeURIComponent(terms)}&ad_reached_countries=%5B%22${country}%22%5D&ad_active_status=ALL&ad_type=ALL&limit=${limit}&fields=${fields}&access_token=${mc.token}`;
+      const r = await fetch(url);
+      const j = await r.json();
+      if (j.error) return toolText(`Ad Library error: ${j.error.message}. Note: it returns creative only (no spend/CTR for commercial ads) and coverage varies by country.`, true);
+      return toolJson({ note: "Creative/copy only. Meta does not expose competitor performance stats for commercial ads.", count: (j.data ?? []).length, results: j.data ?? [] });
+    }
+
+    case "create_post": {
+      const mc = await getMetaCreds(supabase, businessId);
+      if (!mc) return toolText("Connect a Facebook/Instagram Page first.", true);
+      const target = String(args?.platform ?? "facebook").toLowerCase();
+      const message = String(args?.message ?? "").trim();
+      const imageUrl = String(args?.imageUrl ?? "").trim();
+      if (!message) return toolText("Provide the post `message`/caption.", true);
+      if (target === "instagram") {
+        if (!mc.igUserId) return toolText("No Instagram user id on the integration (ig_user_id).", true);
+        if (!imageUrl) return toolText("Instagram posts require an `imageUrl`.", true);
+        const cr = await fetch(`${GRAPH}/${mc.igUserId}/media`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ image_url: imageUrl, caption: message, access_token: mc.token }),
+        });
+        const cj = await cr.json();
+        if (cj.error || !cj.id) return toolText(`Instagram media create failed: ${cj.error?.message ?? "unknown"}`, true);
+        const pub = await fetch(`${GRAPH}/${mc.igUserId}/media_publish`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ creation_id: cj.id, access_token: mc.token }),
+        });
+        const pj = await pub.json();
+        if (pj.error) return toolText(`Instagram publish failed: ${pj.error.message}`, true);
+        return toolText(`Published to Instagram (media id ${pj.id}).`);
+      }
+      const pageId = mc.pageId || "me";
+      const body: Record<string, string> = { message, access_token: mc.token };
+      if (imageUrl) body.link = imageUrl;
+      const r = await fetch(`${GRAPH}/${pageId}/feed`, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+      });
+      const j = await r.json();
+      if (j.error || !j.id) return toolText(`Facebook post failed: ${j.error?.message ?? "unknown"}`, true);
+      return toolText(`Published to Facebook (post id ${j.id}).`);
+    }
+
+    case "list_recent_comments": {
+      const mc = await getMetaCreds(supabase, businessId);
+      if (!mc) return toolText("Connect a Facebook/Instagram Page first.", true);
+      const pageId = mc.pageId || "me";
+      const cFields = encodeURIComponent("message,created_time,comments.limit(10){id,message,from,created_time}");
+      const r = await fetch(`${GRAPH}/${pageId}/posts?fields=${cFields}&limit=5&access_token=${mc.token}`);
+      const j = await r.json();
+      if (j.error) return toolText(`Meta API error: ${j.error.message}`, true);
+      return toolJson({ posts: j.data ?? [] });
+    }
+
+    case "reply_to_comment": {
+      const mc = await getMetaCreds(supabase, businessId);
+      if (!mc) return toolText("Connect a Facebook/Instagram Page first.", true);
+      const commentId = String(args?.commentId ?? "").trim();
+      const message = String(args?.message ?? "").trim();
+      if (!commentId || !message) return toolText("Provide `commentId` and `message`.", true);
+      const endpoint = String(args?.platform ?? "facebook").toLowerCase() === "instagram" ? "replies" : "comments";
+      const r = await fetch(`${GRAPH}/${commentId}/${endpoint}`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, access_token: mc.token }),
+      });
+      const j = await r.json();
+      if (j.error) return toolText(`Reply failed: ${j.error.message}`, true);
+      return toolText(`Replied to comment ${commentId}.`);
+    }
+
+    // ── Appointments ─────────────────────────────────────────────────────────
+    case "list_appointments": {
+      const limit = clampLimit(args?.limit, 30, 100);
+      let q = supabase
+        .from("appointments")
+        .select("id, customer_name, customer_contact, service, starts_at, duration_minutes, status, notes, created_at")
+        .eq("business_id", businessId)
+        .order("starts_at", { ascending: true, nullsFirst: false })
+        .limit(limit);
+      if (typeof args?.status === "string") q = q.eq("status", args.status);
+      const { data, error } = await q;
+      if (error) return toolText(`Failed to load appointments: ${error.message}`, true);
+      return toolJson({ count: data?.length ?? 0, appointments: data ?? [] });
+    }
+
+    case "book_appointment": {
+      const startsAt = String(args?.startsAt ?? "").trim();
+      const d = startsAt ? new Date(startsAt) : null;
+      if (!d || isNaN(d.getTime())) return toolText("Provide a valid ISO 8601 startsAt (e.g. 2026-07-25T14:30).", true);
+      const dur = Number(args?.durationMinutes);
+      const { data, error } = await supabase.from("appointments").insert({
+        business_id: businessId,
+        customer_name: (args?.customerName ?? "").toString().slice(0, 200) || null,
+        customer_contact: (args?.customerContact ?? "").toString().slice(0, 200) || null,
+        service: (args?.service ?? "").toString().slice(0, 200) || null,
+        starts_at: d.toISOString(),
+        duration_minutes: Number.isFinite(dur) && dur > 0 ? Math.floor(dur) : 30,
+        notes: (args?.notes ?? "").toString().slice(0, 1000) || null,
+        status: "confirmed",
+      }).select("id, starts_at").maybeSingle();
+      if (error) return toolText(`Failed to book: ${error.message}`, true);
+      return toolText(`Booked appointment ${data?.id} for ${data?.starts_at}.`);
+    }
+
+    case "update_appointment": {
+      const id = String(args?.appointmentId ?? "");
+      if (!UUID_RE.test(id)) return toolText("Invalid appointmentId.", true);
+      const patch: Record<string, unknown> = {};
+      if (typeof args?.status === "string") patch.status = args.status;
+      if (typeof args?.startsAt === "string" && args.startsAt.trim()) {
+        const d = new Date(args.startsAt);
+        if (!isNaN(d.getTime())) patch.starts_at = d.toISOString();
+      }
+      if (Object.keys(patch).length === 0) return toolText("Nothing to update. Provide status and/or startsAt.", true);
+      patch.updated_at = new Date().toISOString();
+      const { data, error } = await supabase.from("appointments").update(patch)
+        .eq("id", id).eq("business_id", businessId).select("id, status, starts_at").maybeSingle();
+      if (error) return toolText(`Failed to update: ${error.message}`, true);
+      if (!data) return toolText("Appointment not found for this business.", true);
+      return toolText(`Appointment ${data.id} is now ${data.status}${data.starts_at ? ` at ${data.starts_at}` : ""}.`);
     }
 
     default:

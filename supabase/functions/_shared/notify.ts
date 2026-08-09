@@ -121,7 +121,7 @@ export function buildEscalationEmail(opts: {
   reason: string;
   lastMessage: string;
 }): { subject: string; html: string } {
-  const subject = `⚠️ Chat escalated to you — ${opts.businessName}`;
+  const subject = `⚠️ Chat escalated to you: ${opts.businessName}`;
   const body = `
     <p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px;">
       Your AI assistant handed a conversation over to a human. The customer is
@@ -136,6 +136,48 @@ export function buildEscalationEmail(opts: {
   return { subject, html: emailShell("A customer needs your attention", body) };
 }
 
+// ── Voicemail email ──────────────────────────────────────────────────────────
+
+const VOICEMAIL_REASONS: Record<string, string> = {
+  after_hours: "Called outside your business hours",
+  no_human_available: "Nobody picked up the transfer",
+  caller_opted: "The caller asked to leave a message",
+  overflow: "Too many calls at once",
+  ai_unavailable: "The assistant could not take the call",
+  over_limit: "Your monthly voice minutes ran out",
+};
+
+export function buildVoicemailEmail(opts: {
+  businessName: string;
+  fromE164: string | null;
+  durationSeconds: number | null;
+  transcript: string | null;
+  reason: string | null;
+}): { subject: string; html: string } {
+  const secs = opts.durationSeconds ?? 0;
+  const length = `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+  const subject = `📞 New voicemail from ${opts.fromE164 || "an unknown number"} for ${opts.businessName}`;
+
+  const body = `
+    <p style="font-size:14px;color:#374151;line-height:1.6;margin:0 0 16px;">
+      Someone left a voicemail. You can listen to it and reply from the
+      <strong>Voice</strong> section of your dashboard.
+    </p>
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px;">
+      ${infoRow("From", escapeHtml(opts.fromE164 || "Unknown"))}
+      ${infoRow("Length", escapeHtml(length))}
+      ${infoRow("Why", escapeHtml(VOICEMAIL_REASONS[opts.reason ?? ""] ?? "Voicemail"))}
+    </table>
+    ${
+      opts.transcript
+        ? `<p style="font-size:13px;color:#111827;line-height:1.6;margin:16px 0 0;background:#f9fafb;border-left:3px solid #2563eb;padding:12px;">
+             ${escapeHtml(opts.transcript.slice(0, 1200))}
+           </p>`
+        : `<p style="font-size:13px;color:#6b7280;margin:16px 0 0;">Transcript is still being prepared.</p>`
+    }`;
+  return { subject, html: emailShell("New voicemail", body) };
+}
+
 // ── Order confirmation email ─────────────────────────────────────────────────
 
 export function buildOrderEmail(opts: {
@@ -146,7 +188,7 @@ export function buildOrderEmail(opts: {
   customerName: string | null;
   customerEmail: string | null;
 }): { subject: string; html: string } {
-  const subject = `🛒 New order — $${opts.total.toFixed(2)} — ${opts.businessName}`;
+  const subject = `🛒 New order: $${opts.total.toFixed(2)} for ${opts.businessName}`;
 
   const itemRows = opts.items
     .map(

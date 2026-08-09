@@ -121,7 +121,7 @@ const BusinessSettings: React.FC<BusinessSettingsProps> = ({ business, onSetting
                   <Textarea id="bs-sys" value={aiInstructions ?? ''} onChange={(e) => setAiInstructions(e.target.value)}
                     rows={10} className="font-mono text-xs" />
                   <p className="text-xs text-muted-foreground">
-                    Careful — this is the assistant's rulebook. Most owners never need to touch it.
+                    Careful, this is the assistant's rulebook. Most owners never need to touch it.
                   </p>
                 </>
               )}
@@ -133,11 +133,11 @@ const BusinessSettings: React.FC<BusinessSettingsProps> = ({ business, onSetting
           </div>
         ) : (
           <div className="grid sm:grid-cols-2 gap-3">
-            {viewField(<FileText className="h-4 w-4 text-primary" />, 'About the business', business.description, 'Not set yet — tell the AI what you sell.')}
-            {viewField(<ScrollText className="h-4 w-4 text-primary" />, 'Policies', business.policies, 'Not set yet — add shipping & returns rules.')}
+            {viewField(<FileText className="h-4 w-4 text-primary" />, 'About the business', business.description, 'Not set yet, tell the AI what you sell.')}
+            {viewField(<ScrollText className="h-4 w-4 text-primary" />, 'Policies', business.policies, 'Not set yet, add shipping & returns rules.')}
             <div className="sm:col-span-2 flex items-center gap-2 text-xs text-muted-foreground px-1">
               <TerminalSquare className="h-3.5 w-3.5" />
-              System instructions are configured — edit to view or change the assistant's rulebook.
+              System instructions are configured, edit to view or change the assistant's rulebook.
             </div>
           </div>
         )}

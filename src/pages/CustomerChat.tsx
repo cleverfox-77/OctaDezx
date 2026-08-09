@@ -10,6 +10,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { SEO } from "@/components/SEO";
+import { ThinkingOrb } from "thinking-orbs";
 
 // --- TYPES ---
 // Shape returned by the get_public_business RPC (public widget bootstrap).
@@ -130,7 +131,7 @@ async function getCustomerServiceResponse(
       },
     });
     if (error) return "I'm having trouble connecting to the server.";
-    if (data?.rateLimited) return "This business has reached its daily customer limit. Please try again tomorrow or contact the business owner directly.";
+    if (data?.rateLimited) return "This business has used up its message allowance for the month. Please contact them directly and they will get back to you.";
     if (!data?.response) return "No response received.";
     return data.response;
   } catch {
@@ -371,7 +372,7 @@ const CustomerChat = () => {
     const tempStagedImage = stagedImage;
     if (!text) setNewMessage("");
     setStagedImage(null);
-    // Reset textarea — useEffect on newMessage will resize it to min
+    // Reset textarea, useEffect on newMessage will resize it to min
     setTextareaHeight(44);
 
     const optimisticId = 'opt-' + Date.now();
@@ -421,7 +422,7 @@ const CustomerChat = () => {
           try {
             const rawOrderData = JSON.parse(orderMatch[1]);
             // Only item names + quantities are taken from the AI. Price and total
-            // are NEVER trusted from the model/client — the create-order edge
+            // are NEVER trusted from the model/client, the create-order edge
             // function (service role) recomputes them from the catalogue.
             const requestedItems = Array.isArray(rawOrderData.items)
               ? rawOrderData.items
@@ -453,7 +454,7 @@ const CustomerChat = () => {
                 processPostOrder(placedOrder.id).catch(e => console.error("Post-order automation failed:", e));
               } else {
                 console.error("Order creation failed:", orderError || orderResult);
-                aiResponse += "\n\n⚠️ I couldn't finalise that order automatically — our team will follow up to confirm the details.";
+                aiResponse += "\n\n⚠️ I couldn't finalise that order automatically, our team will follow up to confirm the details.";
               }
             }
           } catch (e) {
@@ -573,7 +574,7 @@ const CustomerChat = () => {
               content: `🧾 Here's your invoice: \`${data.invoice.invoice_number}\`\n\n[📥 Download PDF invoice](${data.invoice.pdf_url})`,
             });
             await loadMessages();
-            return true; // handled — skip normal AI call
+            return true; // handled, skip normal AI call
           }
         } catch (e) { console.error("Invoice request failed:", e); }
       }
@@ -649,7 +650,9 @@ const CustomerChat = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-950">
         <div className="flex flex-col items-center gap-3">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+          {/* This page paints its own dark palette rather than following the
+              theme, so the orb is pinned dark or its ink comes out invisible. */}
+          <ThinkingOrb state="connecting" size={64} theme="dark" aria-label="Connecting" />
           <p className="text-gray-400 text-sm">Connecting...</p>
         </div>
       </div>
@@ -721,7 +724,7 @@ const CustomerChat = () => {
           {/* Welcome banner */}
           <div className="text-center mb-6">
             <div className="inline-block bg-gray-800/60 border border-gray-700/50 rounded-2xl px-4 py-3 text-xs text-gray-400">
-              Welcome to <span className="text-white font-medium">{business.name}</span> — your AI assistant is here to help
+              Welcome to <span className="text-white font-medium">{business.name}</span>, your AI assistant is here to help
             </div>
           </div>
 
@@ -774,10 +777,8 @@ const CustomerChat = () => {
           {typing && (
             <div className="flex items-end gap-2 mt-3">
               <BusinessAvatar name={business.name} />
-              <div className="bg-gray-800 border border-gray-700/60 rounded-2xl rounded-bl-sm px-4 py-3 flex gap-1 items-center">
-                <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '0ms' }} />
-                <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '150ms' }} />
-                <span className="w-2 h-2 rounded-full bg-gray-400 animate-bounce" style={{ animationDelay: '300ms' }} />
+              <div className="bg-gray-800 border border-gray-700/60 rounded-2xl rounded-bl-sm px-4 py-2.5 flex gap-1 items-center">
+                <ThinkingOrb state="working" size={20} theme="dark" aria-label="Assistant is typing" />
               </div>
             </div>
           )}

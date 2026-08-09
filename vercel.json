@@ -8,6 +8,10 @@
       "memory": 256,
       "maxDuration": 10
     },
+    "api/apply.js": {
+      "memory": 256,
+      "maxDuration": 15
+    },
     "api/oauth/*.js": {
       "memory": 256,
       "maxDuration": 10

@@ -6,8 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, ArrowLeft, Brain, Check } from "lucide-react";
-import { BUSINESS_TYPES, buildAiInstructions, type BusinessType } from "@/lib/businessTypes";
+import { Loader2, ArrowLeft, ArrowRight, Brain, Check, LayoutGrid } from "lucide-react";
+import { BUSINESS_TYPES, buildAiInstructions, defaultFeatures, type BusinessType, type SectionId } from "@/lib/businessTypes";
+import FeatureSelector from "@/components/FeatureSelector";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Onboarding is intentionally tiny: pick a business type, name it, done. Every
@@ -20,7 +21,7 @@ interface BusinessSetupProps {
   onBusinessCreated: () => void;
 }
 
-const STEPS = ["Business type", "Name it"];
+const STEPS = ["Business type", "Features", "Name it"];
 
 const StepHeader = ({ step }: { step: number }) => (
   <div className="flex flex-col items-center gap-4 mb-8">
@@ -52,13 +53,15 @@ const BusinessSetup = ({ onBusinessCreated }: BusinessSetupProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(0); // 0 = pick type, 1 = name it
+  const [step, setStep] = useState(0); // 0 = pick type, 1 = features, 2 = name it
   const [selectedType, setSelectedType] = useState<BusinessType | null>(null);
+  const [features, setFeatures] = useState<SectionId[]>([]);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
 
   const chooseType = (t: BusinessType) => {
     setSelectedType(t);
+    setFeatures(defaultFeatures(t.id));
     setStep(1);
   };
 
@@ -76,6 +79,7 @@ const BusinessSetup = ({ onBusinessCreated }: BusinessSetupProps) => {
         ai_instructions: buildAiInstructions(selectedType.id),
         business_type: selectedType.id,
         type_config: {},
+        enabled_features: features,
       }]);
       if (error) throw error;
 
@@ -102,7 +106,7 @@ const BusinessSetup = ({ onBusinessCreated }: BusinessSetupProps) => {
           <h1 className="text-2xl sm:text-3xl font-bold tracking-tight mb-2">What kind of business are you?</h1>
           <p className="text-muted-foreground max-w-lg mx-auto text-sm sm:text-base">
             Your dashboard and AI assistant are built around how your business actually
-            works — a restaurant never sees "Shipments", a store never sees "Menus".
+            works, a restaurant never sees "Shipments", a store never sees "Menus".
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -127,7 +131,7 @@ const BusinessSetup = ({ onBusinessCreated }: BusinessSetupProps) => {
           ))}
         </div>
         <p className="text-center text-xs text-muted-foreground mt-8">
-          You can change everything later — nothing here is permanent.
+          You can change everything later, nothing here is permanent.
         </p>
       </div>
     );
@@ -135,10 +139,65 @@ const BusinessSetup = ({ onBusinessCreated }: BusinessSetupProps) => {
 
   if (!selectedType) return null;
 
-  // ── STEP 1: name it & create ───────────────────────────────────
+  // ── STEP 1: choose the tools you need ──────────────────────────
+  if (step === 1) {
+    return (
+      <div className="section-enter max-w-3xl mx-auto px-1">
+        <StepHeader step={1} />
+        <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-3.5 border-b bg-muted/40">
+            <div className="flex items-center gap-2.5 text-sm font-medium">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <selectedType.icon className="h-3.5 w-3.5 text-primary" />
+              </div>
+              {selectedType.label}
+            </div>
+            <button type="button" onClick={() => setStep(0)}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+              Change
+            </button>
+          </div>
+
+          <div className="p-6 sm:p-8 space-y-6">
+            <div>
+              <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-1.5">Which tools do you need?</h1>
+              <p className="text-sm text-muted-foreground">
+                We picked the ones most {selectedType.label.toLowerCase()} businesses use. Turn any on or off,
+                and add more later any time from your dashboard.
+              </p>
+            </div>
+
+            <FeatureSelector typeId={selectedType.id} value={features} onChange={setFeatures} />
+
+            <div className="flex items-start gap-3 rounded-xl border bg-primary/[0.04] border-primary/15 p-4 text-sm">
+              <LayoutGrid className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
+              <p className="text-muted-foreground leading-relaxed">
+                Chat Sessions, Train AI, Analytics and Connect to Claude are always included, so this is just
+                about the extra tools. <strong className="text-foreground">{features.length}</strong> selected.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <Button type="button" variant="ghost" onClick={() => setStep(0)} className="press">
+                <ArrowLeft className="h-4 w-4 mr-2" />Back
+              </Button>
+              <Button type="button" onClick={() => setStep(2)} className="press px-6 h-11">
+                Continue<ArrowRight className="h-4 w-4 ml-2" />
+              </Button>
+            </div>
+          </div>
+        </div>
+        <p className="text-center text-xs text-muted-foreground mt-6">
+          Nothing here is permanent, you can add or remove tools whenever you like.
+        </p>
+      </div>
+    );
+  }
+
+  // ── STEP 2: name it & create ───────────────────────────────────
   return (
     <div className="section-enter max-w-xl mx-auto px-1">
-      <StepHeader step={1} />
+      <StepHeader step={2} />
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         {/* selected type ribbon */}
         <div className="flex items-center justify-between px-6 py-3.5 border-b bg-muted/40">
@@ -157,7 +216,7 @@ const BusinessSetup = ({ onBusinessCreated }: BusinessSetupProps) => {
         <div className="p-6 sm:p-8 space-y-6">
           <div>
             <h1 className="text-xl sm:text-2xl font-bold tracking-tight mb-1.5">Name your business</h1>
-            <p className="text-sm text-muted-foreground">That's all we need to get started — you'll train the AI next.</p>
+            <p className="text-sm text-muted-foreground">That's all we need to get started, you'll train the AI next.</p>
           </div>
 
           <div className="space-y-2">
@@ -188,13 +247,13 @@ const BusinessSetup = ({ onBusinessCreated }: BusinessSetupProps) => {
           <div className="flex items-start gap-3 rounded-xl border bg-primary/[0.04] border-primary/15 p-4 text-sm">
             <Brain className="h-4 w-4 mt-0.5 text-primary flex-shrink-0" />
             <p className="text-muted-foreground leading-relaxed">
-              After this, your dashboard opens on <strong className="text-foreground">Train AI</strong> — add your services,
+              After this, your dashboard opens on <strong className="text-foreground">Train AI</strong>, add your services,
               hours, prices and policies there so the assistant only ever answers from real information.
             </p>
           </div>
 
           <div className="flex items-center justify-between pt-1">
-            <Button type="button" variant="ghost" onClick={() => setStep(0)} disabled={loading} className="press">
+            <Button type="button" variant="ghost" onClick={() => setStep(1)} disabled={loading} className="press">
               <ArrowLeft className="h-4 w-4 mr-2" />Back
             </Button>
             <Button type="button" onClick={handleSubmit} disabled={loading || !name.trim()} className="press px-6 h-11">

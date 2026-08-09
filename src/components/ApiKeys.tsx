@@ -32,7 +32,7 @@ const ApiKeys = ({ businessId }: ApiKeysProps) => {
   const [creating, setCreating] = useState(false);
   const [newKeyName, setNewKeyName] = useState("");
   const [createOpen, setCreateOpen] = useState(false);
-  // The freshly minted key — shown exactly once, never retrievable again.
+  // The freshly minted key, shown exactly once, never retrievable again.
   const [freshKey, setFreshKey] = useState<string | null>(null);
 
   const loadKeys = useCallback(async () => {
@@ -226,9 +226,9 @@ const { sessionId: sid, reply, escalated, order } = await res.json();`;
           </div>
 
           <div className="text-xs text-muted-foreground space-y-1 border-t pt-3">
-            <p>• Response: <code>{`{ sessionId, reply, escalated, order }`}</code> — when <code>escalated</code> is true, a human should take over (poll <code>GET {API_BASE}/messages?sessionId=…</code> for their replies).</p>
-            <p>• Rate limit: 60 requests/minute per key, plus your plan's daily customer limits.</p>
-            <p>• Keep keys on your server. Never embed them in public website code — anyone could read them.</p>
+            <p>• Response: <code>{`{ sessionId, reply, escalated, order }`}</code>, when <code>escalated</code> is true, a human should take over (poll <code>GET {API_BASE}/messages?sessionId=…</code> for their replies).</p>
+            <p>• Rate limit: 60 requests/minute per key, and every AI answer draws on your plan's monthly message allowance.</p>
+            <p>• Keep keys on your server. Never embed them in public website code, anyone could read them.</p>
           </div>
         </CardContent>
       </Card>
@@ -241,7 +241,7 @@ const { sessionId: sid, reply, escalated, order } = await res.json();`;
               <DialogHeader>
                 <DialogTitle>Your new API key</DialogTitle>
                 <DialogDescription>
-                  Copy it now — for security, it's shown <strong>only once</strong> and can't be recovered.
+                  Copy it now, for security, it's shown <strong>only once</strong> and can't be recovered.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-3">
@@ -256,7 +256,7 @@ const { sessionId: sid, reply, escalated, order } = await res.json();`;
                   <span>Treat this like a password. If it leaks, revoke it here and create a new one.</span>
                 </div>
                 <Button className="w-full" onClick={() => { setCreateOpen(false); setFreshKey(null); }}>
-                  Done — I've copied it
+                  Done, I've copied it
                 </Button>
               </div>
             </>

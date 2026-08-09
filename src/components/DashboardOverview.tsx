@@ -74,7 +74,7 @@ const DashboardOverview = ({ business, chatLink, onNavigate }: Props) => {
   const trained = Boolean(business.policies?.trim() || business.description?.trim());
 
   const checklist = useMemo(() => [
-    { label: "Create your business", done: true, hint: "Done — welcome aboard", action: null as SectionId | null },
+    { label: "Create your business", done: true, hint: "Done, welcome aboard", action: null as SectionId | null },
     { label: "Add your catalogue", done: (stats?.products ?? 0) > 0, hint: "Import from any store URL or CSV", action: "products" as SectionId },
     { label: "Train the AI", done: trained, hint: "Policies, tone and FAQs", action: "train" as SectionId },
     { label: "Share your chat link", done: linkShared, hint: "Or connect WhatsApp & Instagram", action: "integrations" as SectionId },
@@ -161,7 +161,7 @@ const DashboardOverview = ({ business, chatLink, onNavigate }: Props) => {
             <p className="text-sm text-muted-foreground mb-4">
               {setupComplete
                 ? "Your AI agent has everything it needs. Watch conversations roll in."
-                : "Two minutes each — every step makes your AI meaningfully smarter."}
+                : "Two minutes each, every step makes your AI meaningfully smarter."}
             </p>
             <div className="h-1.5 rounded-full bg-muted mb-5 overflow-hidden">
               <div className="h-full rounded-full transition-all duration-700"

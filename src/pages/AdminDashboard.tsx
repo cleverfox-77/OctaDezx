@@ -120,7 +120,11 @@ const PLAN_COLORS: Record<string, string> = {
   trial: "bg-yellow-100 text-yellow-800",
   starter: "bg-blue-100 text-blue-800",
   pro: "bg-purple-100 text-purple-800",
+  advanced: "bg-indigo-100 text-indigo-800",
   enterprise: "bg-green-100 text-green-800",
+  // The $9 tier withdrawn in the August 2026 repricing. Nobody can buy it; the
+  // accounts already on it keep it, so admin still has to be able to see it.
+  legacy_starter: "bg-slate-200 text-slate-700",
   appsumo_ltd: "bg-orange-100 text-orange-800",
 };
 
@@ -204,7 +208,7 @@ export default function AdminDashboard() {
         .select("user_id")
         .eq("user_id", user!.id)
         .single();
-      // PGRST116 = no row (non-admin) — expected, not a real error
+      // PGRST116 = no row (non-admin), expected, not a real error
       if (data && !error) setIsAdmin(true);
     } catch (err) {
       console.error("Admin check failed:", err);
@@ -590,7 +594,7 @@ export default function AdminDashboard() {
   const PlanDistribution = ({ distribution }: { distribution: Record<string, number> }) => {
     const total = Object.values(distribution).reduce((a, b) => a + b, 0);
     if (total === 0) return <p className="text-sm text-muted-foreground">No data</p>;
-    const plans = ["free", "trial", "starter", "pro", "enterprise", "appsumo_ltd"];
+    const plans = ["free", "trial", "starter", "pro", "advanced", "enterprise", "legacy_starter", "appsumo_ltd"];
     return (
       <div className="space-y-3">
         {plans.map(plan => {
@@ -798,7 +802,7 @@ export default function AdminDashboard() {
                                 <SelectValue placeholder="Change plan" />
                               </SelectTrigger>
                               <SelectContent>
-                                {["free", "trial", "starter", "pro", "enterprise", "appsumo_ltd"].map(p => (
+                                {["free", "trial", "starter", "pro", "advanced", "enterprise", "legacy_starter", "appsumo_ltd"].map(p => (
                                   <SelectItem key={p} value={p} className="text-xs">
                                     {p === "appsumo_ltd" ? "AppSumo LTD" : p}
                                   </SelectItem>
@@ -906,7 +910,7 @@ export default function AdminDashboard() {
               {/* Quick stats */}
               {stats && (
                 <div className="grid gap-4 md:grid-cols-4">
-                  {["starter", "pro", "enterprise", "appsumo_ltd"].map(plan => (
+                  {["starter", "pro", "advanced", "enterprise", "legacy_starter", "appsumo_ltd"].map(plan => (
                     <Card key={plan}>
                       <CardContent className="pt-6 text-center">
                         <p className="text-sm text-muted-foreground capitalize">
@@ -939,7 +943,7 @@ export default function AdminDashboard() {
                       </thead>
                       <tbody className="divide-y">
                         {users
-                          .filter(u => ["starter", "pro", "enterprise", "appsumo_ltd"].includes(u.plan_type))
+                          .filter(u => ["starter", "pro", "advanced", "enterprise", "legacy_starter", "appsumo_ltd"].includes(u.plan_type))
                           .map(u => (
                             <tr key={u.user_id} className="hover:bg-muted/30">
                               <td className="p-3">{u.email}</td>
@@ -961,7 +965,7 @@ export default function AdminDashboard() {
                               </td>
                             </tr>
                           ))}
-                        {users.filter(u => ["starter", "pro", "enterprise", "appsumo_ltd"].includes(u.plan_type)).length === 0 && (
+                        {users.filter(u => ["starter", "pro", "advanced", "enterprise", "legacy_starter", "appsumo_ltd"].includes(u.plan_type)).length === 0 && (
                           <tr>
                             <td colSpan={5} className="p-8 text-center text-muted-foreground">
                               No paid subscribers found. Load users first.
@@ -1000,7 +1004,7 @@ export default function AdminDashboard() {
                     />
                   </div>
 
-                  {/* Top businesses by daily usage — load from businesses tab */}
+                  {/* Top businesses by daily usage, load from businesses tab */}
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-base">Top Businesses by Daily Usage</CardTitle>
@@ -1317,7 +1321,7 @@ export default function AdminDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle className="text-base">All Chat Sessions</CardTitle>
-                  <CardDescription>Every chat across every business — including anonymous visitors.</CardDescription>
+                  <CardDescription>Every chat across every business, including anonymous visitors.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex gap-2 flex-wrap">

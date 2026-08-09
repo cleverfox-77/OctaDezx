@@ -16,11 +16,11 @@ interface McpConnectProps {
   onUpgrade: () => void;
 }
 
-// Branded endpoint — Vercel proxies /mcp → the Supabase edge function, so the
+// Branded endpoint, Vercel proxies /mcp → the Supabase edge function, so the
 // connector URL, OAuth login and consent all live on one octadezx.com origin.
 const MCP_URL = "https://octadezx.com/mcp";
 
-// The tools the OctaDezx MCP exposes inside Claude — grouped so owners see they
+// The tools the OctaDezx MCP exposes inside Claude, grouped so owners see they
 // can set up, train, run AND analyse from Claude.
 const TOOL_GROUPS: { heading: string; tools: { name: string; desc: string }[] }[] = [
   {
@@ -81,7 +81,7 @@ const McpConnect = ({ businessId, subscribed, onUpgrade }: McpConnectProps) => {
       const key = (data as any)?.key as string | undefined;
       if (key) {
         setFreshKey(key);
-        toast({ title: "Connection key created", description: "Copy it now — it's shown only once." });
+        toast({ title: "Connection key created", description: "Copy it now, it's shown only once." });
       }
       loadKeys();
     } catch (e: any) {
@@ -123,7 +123,7 @@ const McpConnect = ({ businessId, subscribed, onUpgrade }: McpConnectProps) => {
             Connect OctaDezx to Claude
           </CardTitle>
           <CardDescription>
-            Run your whole assistant from inside Claude — in plain language. Claude can set up your business details,
+            Run your whole assistant from inside Claude, in plain language. Claude can set up your business details,
             train the AI, handle escalated chats, and analyse your conversations for insights.
           </CardDescription>
         </CardHeader>
@@ -154,7 +154,7 @@ const McpConnect = ({ businessId, subscribed, onUpgrade }: McpConnectProps) => {
             <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
             <div className="text-sm">
               <p className="font-medium">Your plan includes MCP access</p>
-              <p className="text-muted-foreground mt-1">Connect below — every tool is unlocked.</p>
+              <p className="text-muted-foreground mt-1">Connect below, every tool is unlocked.</p>
             </div>
           </CardContent>
         </Card>
@@ -164,7 +164,7 @@ const McpConnect = ({ businessId, subscribed, onUpgrade }: McpConnectProps) => {
             <div className="flex items-start gap-3">
               <Lock className="h-5 w-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
               <div className="text-sm">
-                <p className="font-medium">Connecting is free — using it needs a subscription</p>
+                <p className="font-medium">Connecting is free, using it needs a subscription</p>
                 <p className="text-muted-foreground mt-1">
                   You can add the connection to Claude right now. The tools stay locked and return a
                   "subscription required" message until you're on a paid plan.
@@ -176,7 +176,7 @@ const McpConnect = ({ businessId, subscribed, onUpgrade }: McpConnectProps) => {
         </Card>
       )}
 
-      {/* Primary — one-click OAuth connector (no keys to copy) */}
+      {/* Primary, one-click OAuth connector (no keys to copy) */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
@@ -184,7 +184,7 @@ const McpConnect = ({ businessId, subscribed, onUpgrade }: McpConnectProps) => {
             Connect in Claude
           </CardTitle>
           <CardDescription>
-            The easy way — nothing to copy but one URL. Claude opens OctaDezx in your browser, you sign in and
+            The easy way, nothing to copy but one URL. Claude opens OctaDezx in your browser, you sign in and
             click Authorize.
           </CardDescription>
         </CardHeader>
@@ -208,13 +208,13 @@ const McpConnect = ({ businessId, subscribed, onUpgrade }: McpConnectProps) => {
             </li>
             <li className="flex gap-3">
               <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold flex-shrink-0">3</span>
-              <span>A browser opens — <strong>sign in to OctaDezx</strong> and click <strong>Authorize</strong>. Done.</span>
+              <span>A browser opens, <strong>sign in to OctaDezx</strong> and click <strong>Authorize</strong>. Done.</span>
             </li>
           </ol>
         </CardContent>
       </Card>
 
-      {/* Advanced — legacy API key for Claude Desktop / non-OAuth clients */}
+      {/* Advanced, legacy API key for Claude Desktop / non-OAuth clients */}
       <Card>
         <CardHeader className="cursor-pointer select-none" onClick={() => setShowAdvanced((v) => !v)}>
           <CardTitle className="text-base flex items-center justify-between">

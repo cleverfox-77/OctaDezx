@@ -139,14 +139,14 @@ export default function InvoiceSettings({ business, onSettingsUpdated }: Props) 
                     <RadioGroupItem value="uuid" className="mt-0.5" />
                     <div>
                       <div className="font-medium text-sm">Random unique IDs</div>
-                      <p className="text-xs text-muted-foreground">e.g. {seqPrefix}-A1B2C3D4 — non-guessable, no order leakage.</p>
+                      <p className="text-xs text-muted-foreground">e.g. {seqPrefix}-A1B2C3D4, non-guessable, no order leakage.</p>
                     </div>
                   </label>
                   <label className="flex items-start gap-3 p-3 rounded-lg border cursor-pointer hover:bg-muted/40">
                     <RadioGroupItem value="sequential" className="mt-0.5" />
                     <div>
                       <div className="font-medium text-sm">Sequential</div>
-                      <p className="text-xs text-muted-foreground">e.g. {seqPrefix}-00001, {seqPrefix}-00002 — easy to reference, common for accounting.</p>
+                      <p className="text-xs text-muted-foreground">e.g. {seqPrefix}-00001, {seqPrefix}-00002, easy to reference, common for accounting.</p>
                     </div>
                   </label>
                 </RadioGroup>

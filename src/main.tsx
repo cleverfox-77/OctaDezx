@@ -1,14 +1,11 @@
-import { createRoot, hydrateRoot } from 'react-dom/client'
+import { createRoot } from 'react-dom/client'
 import App from './App'
 import './index.css'
 
 const container = document.getElementById("root")!;
 
-// If the page was prerendered (react-snap / SSG), #root already contains markup,
-// so hydrate it. Otherwise mount fresh. #root is intentionally empty in
-// index.html (the no-JS fallback lives in a sibling <noscript>).
-if (container.hasChildNodes()) {
-  hydrateRoot(container, <App />);
-} else {
-  createRoot(container).render(<App />);
-}
+// #root ships with the crawler fallback markup from index.html (or, per route,
+// from scripts/prerender.mjs). That markup is plain HTML, not a React render, so
+// it must NOT be hydrated: hydrateRoot would mismatch every node. createRoot()
+// clears the container on first render, which is exactly what we want.
+createRoot(container).render(<App />);

@@ -348,6 +348,53 @@ verify_jwt = false
 [functions.mcp]
 verify_jwt = false
 
+# ── External webhook receivers ──────────────────────────────────────────────
+# Meta/Telegram/Stripe/etc. call these with their own signatures or verify
+# tokens, never a Supabase JWT, so the gateway must NOT require one. Each
+# function authenticates the payload itself (HMAC signature or verify token).
+[functions.platform-webhook]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.lemon-squeezy-webhook]
+verify_jwt = false
+
+# Voice. The callers are the Fly media server and Telnyx, neither of which has a
+# Supabase user session, so each function authenticates its own payload:
+# ai-voice-turn checks VOICE_SERVER_SECRET, the carrier webhooks verify the
+# Ed25519 telnyx-signature header, and the cron-driven dispatcher checks
+# CRON_SECRET.
+[functions.ai-voice-turn]
+verify_jwt = false
+
+[functions.voice-telnyx]
+verify_jwt = false
+
+[functions.voice-jobs]
+verify_jwt = false
+
+[functions.kb-embed]
+verify_jwt = false
+
+# ai-learn serves two callers with different credentials, so the platform gate
+# has to be off and the check has to happen inside: pg_cron presents a bearer
+# CRON_SECRET (not a JWT, so verify_jwt would reject it outright), while the
+# dashboard's "Learn now" button presents a real user JWT that the function
+# verifies itself and matches against businesses.owner_id.
+[functions.ai-learn]
+verify_jwt = false
+
+# voice-admin is deliberately absent: it is called from the dashboard by a
+# signed-in owner, so it keeps the default JWT check and then re-verifies that
+# the caller owns the business before doing anything with the service role.
+#
+# team-invite is absent for the same reason, and more strongly: it creates the
+# invitation with the caller's own JWT so that create_team_invitation's owner
+# and admin checks and the plan seat limit all still apply. Turning off
+# verify_jwt here would let anyone mint invitations to any team.
+
 [analytics]
 enabled = true
 port = 54327

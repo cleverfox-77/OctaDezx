@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Bot, ShieldCheck, Loader2, CheckCircle2, AlertTriangle, Sparkles } from "lucide-react";
 
-// Where to return after /auth login — read by Auth.tsx + AuthCallback.
+// Where to return after /auth login, read by Auth.tsx + AuthCallback.
 // (Keep this literal in sync across those files.)
 const RETURN_KEY = "octadezx_oauth_return";
 
@@ -16,7 +16,7 @@ interface Business {
   business_type?: string | null;
 }
 
-// What Claude will be able to do — mirrors McpConnect's tool groups, condensed.
+// What Claude will be able to do, mirrors McpConnect's tool groups, condensed.
 const CAPABILITIES = [
   "Read and reply to your customer conversations",
   "See and resolve chats escalated to a human",

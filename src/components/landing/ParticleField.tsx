@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 
-/* Constellation network behind the hero — dependency-free canvas 2D.
+/* Constellation network behind the hero, dependency-free canvas 2D.
    Desktop pointer devices only, pauses off-screen, skipped entirely for
    prefers-reduced-motion. ~60 nodes, cheap enough to never touch the main
    thread budget that the chat animation needs. */

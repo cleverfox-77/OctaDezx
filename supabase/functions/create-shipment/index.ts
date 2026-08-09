@@ -193,7 +193,7 @@ async function easypost(creds: any, order: any, business: any): Promise<Shipment
 
   // Use stored business address as 'from', order shipping_address as 'to'
   const toAddr = parseAddress(order.shipping_address) ?? {
-    name: order.customer_name, street1: "Address on file", city: "—", country: "US", zip: "00000",
+    name: order.customer_name, street1: "Address on file", city: "Unknown", country: "US", zip: "00000",
   };
   const fromAddr = {
     name: business.name,
@@ -249,7 +249,7 @@ async function shippo(creds: any, order: any, business: any): Promise<ShipmentRe
   if (!apiKey) throw new Error("Shippo api_token missing");
 
   const toAddr = parseAddress(order.shipping_address) ?? {
-    name: order.customer_name, street1: "Address on file", city: "—", country: "US", zip: "00000",
+    name: order.customer_name, street1: "Address on file", city: "Unknown", country: "US", zip: "00000",
   };
   const fromAddr = {
     name: business.name, street1: business.business_address ?? "1 Main St",
@@ -299,7 +299,7 @@ async function aftership(creds: any, order: any, _business: any): Promise<Shipme
   // number the owner supplies later.
   return {
     tracking_number: null, label_url: null, status: "manual",
-    status_detail: "AfterShip is a tracker only — add tracking number after shipping. AfterShip will auto-update status.",
+    status_detail: "AfterShip is a tracker only. Add tracking number after shipping. AfterShip will auto-update status.",
     cost: null, currency: null,
     raw_response: { provider: "aftership", note: "tracking-only" },
   };
@@ -372,7 +372,7 @@ async function steadfast(creds: any, order: any, _business: any): Promise<Shipme
       invoice: order.id.slice(0, 12),
       recipient_name: order.customer_name ?? "Customer",
       recipient_phone: order.customer_phone ?? "01700000000",
-      recipient_address: order.shipping_address ?? "—",
+      recipient_address: order.shipping_address ?? "Not provided",
       cod_amount: Number(order.total_amount ?? 0),
       note: (Array.isArray(order.items) ? order.items.map((i: any) => `${i.name}`).join(", ") : "").slice(0, 200),
     }),
@@ -394,6 +394,6 @@ async function steadfast(creds: any, order: any, _business: any): Promise<Shipme
 function parseAddress(addr: any): any | null {
   if (!addr) return null;
   if (typeof addr === "object") return addr;
-  if (typeof addr === "string") return { name: "Customer", street1: addr, city: "—", country: "US", zip: "00000" };
+  if (typeof addr === "string") return { name: "Customer", street1: addr, city: "Unknown", country: "US", zip: "00000" };
   return null;
 }

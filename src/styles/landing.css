@@ -251,6 +251,21 @@
   animation: shimmerSweep 1s linear;
 }
 
+/* Affiliate hero stats: the values vary in length ("Lifetime", "60 days"),
+   and the grid is width-capped (max-w-3xl), so the vw-based .stat-num clamp
+   blew past the narrow 4-column cards (clipping "Lifetime", wrapping "60 days").
+   Use a container-safe fixed size that keeps the longest value on one line. */
+.affiliate-stat {
+  font-weight: 900;
+  font-size: 1.5rem;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  white-space: nowrap;
+}
+@media (min-width: 640px)  { .affiliate-stat { font-size: 1.85rem; } }
+@media (min-width: 1024px) { .affiliate-stat { font-size: 1.7rem; } }
+
 /* ── Divider line ── */
 .divider {
   height: 1px;
@@ -289,6 +304,24 @@
   to   { transform: none; opacity: 1; }
 }
 .menu-panel { animation: slideRight 0.3s cubic-bezier(0.16,1,0.3,1); }
+
+/* The mobile menu is portalled to <body>, i.e. OUTSIDE .octa-landing, so the
+   scoped Material Symbols rule in index.css no longer reaches its icons. Re-declare
+   the font here for the portal so the icons render as glyphs, not ligature text. */
+.mobile-menu-portal .material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
 
 /* ── Dropdown ── */
 @keyframes dropIn {
@@ -465,6 +498,25 @@
 .mock-typing span:nth-child(2) { animation-delay: 0.2s }
 .mock-typing span:nth-child(3) { animation-delay: 0.4s }
 
+/* ── Footer (dark) ── */
+.footer-link {
+  color: rgba(255,255,255,0.68);
+  transition: color 0.2s ease;
+}
+.footer-link:hover { color: #ffffff; }
+.footer-social {
+  color: rgba(255,255,255,0.72);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.14);
+  transition: color 0.2s, background 0.2s, border-color 0.2s, transform 0.2s;
+}
+.footer-social:hover {
+  color: #ffffff;
+  background: rgba(255,255,255,0.13);
+  border-color: rgba(255,255,255,0.28);
+  transform: translateY(-2px);
+}
+
 /* ══════════════════════════════════════════════════════════
    MOBILE OPTIMIZATIONS
 ══════════════════════════════════════════════════════════ */
@@ -472,6 +524,18 @@
 /* Hide orbit items on small screens (mobile uses grid layout instead) */
 @media (max-width: 640px) {
   .orbit-item { display: none; }
+
+  /* On phones, reveal by rising vertically instead of sliding sideways.
+     The horizontal slide (translateX ±28px) pushed content past the viewport
+     edge, which read as jittery/misaligned on narrow screens. */
+  .reveal-l,
+  .reveal-r {
+    transform: translateY(24px);
+  }
+  .reveal-l.visible,
+  .reveal-r.visible {
+    transform: none;
+  }
 }
 
 /* ══════════════════════════════════════════════════════════

@@ -5,6 +5,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { assertPublicUrl } from "../_shared/urlGuard.ts";
 import { buildEscalationEmail, getOwnerContact, sendOwnerEmail } from "../_shared/notify.ts";
+import { buildLessonBlock, fingerprint, isHedge, sanitiseUntrusted } from "../_shared/learning.ts";
 
 // ========================================
 // TYPE DEFINITIONS
@@ -572,7 +573,7 @@ Escalate the conversation to a human when ANY of these happen:
 
 **HOW TO ESCALATE:**
 1. Write a short, warm handoff message in the CUSTOMER'S language, e.g.
-   "I've passed this to our team — a human teammate will reply here shortly."
+   "I've passed this to our team. A human teammate will reply here shortly."
 2. Append this HIDDEN marker at the VERY END of your message (single line, valid JSON, English reason):
 ||ESCALATE:{"reason":"short reason here"}||
 
@@ -855,8 +856,14 @@ Deno.serve(async (req: Request) => {
   console.log("\n========== NEW AI REQUEST ==========");
   
   try {
-    const { message, businessId, sessionId, imageUrl = null, history: rawHistory = [] } = await req.json();
-    const history = rawHistory.slice(-10); // Sliding window: last 10 messages to cap token usage
+    const { message: rawMessage, businessId, sessionId, imageUrl = null, history: rawHistory = [] } = await req.json();
+    // Neutralize the ||...|| control-marker syntax in customer-supplied text so a
+    // customer can't inject a literal ||ESCALATE:...|| / ||ORDER_CONFIRMED:...||
+    // for the model to echo back as a real action.
+    const stripMarkers = (s: string) => s.replace(/\|\|/g, "¦¦");
+    const message = typeof rawMessage === "string" ? stripMarkers(rawMessage) : rawMessage;
+    const history = (Array.isArray(rawHistory) ? rawHistory : []).slice(-10) // Sliding window: last 10 messages to cap token usage
+      .map((m: any) => (m && typeof m.content === "string" ? { ...m, content: stripMarkers(m.content) } : m));
 
     if (!message || !businessId || !sessionId) {
       throw new Error("Missing required fields: message, businessId, sessionId");
@@ -919,7 +926,7 @@ Deno.serve(async (req: Request) => {
       console.log(`🚫 Rate limited: ${usageCheck.reason} (plan: ${usageCheck.plan})`);
       return new Response(
         JSON.stringify({
-          response: "We're sorry, but this business has reached its daily customer limit. Please try again tomorrow or contact the business owner directly.",
+          response: "We're sorry, but this business has used up its message allowance for the month. Please contact the business directly and they will get back to you.",
           escalated: false,
           rateLimited: true,
           reason: usageCheck.reason
@@ -1002,7 +1009,45 @@ Deno.serve(async (req: Request) => {
     console.log(`📚 Knowledge base: ${knowledgeEntries.length} total entries loaded`);
 
     // Build prompts with FULL context chain: policies → instructions → products → knowledge base
-    const systemPrompt = buildEnhancedSystemPrompt(business, tracker, business.products || [], knowledgeEntries);
+    let systemPrompt = buildEnhancedSystemPrompt(business, tracker, business.products || [], knowledgeEntries);
+
+    // What this assistant has learned from this business's own past
+    // conversations. Only lessons the owner approved are served, which is the
+    // gate that stops a customer typing their way into the standing
+    // instructions of every later conversation. Returns "" until there are any,
+    // so this costs nothing on a business that has never reviewed a lesson.
+    try {
+      const lessonBlock = await buildLessonBlock(supabase, businessId);
+      if (lessonBlock) {
+        systemPrompt += `\n\n${lessonBlock}`;
+        const applied = lessonBlock.split("\n").filter((l) => l.startsWith("- ")).length;
+        console.log(`🧠 Applied ${applied} learned lesson(s)`);
+      }
+    } catch (e) {
+      // Never fail a live customer conversation because the learning layer had
+      // a bad day. The assistant simply answers without its lessons.
+      console.warn("⚠️ lesson block skipped:", e instanceof Error ? e.message : e);
+    }
+
+    // Appointments: if the business takes bookings, teach the AI how to collect
+    // the details and place a booking with the hidden ||APPOINTMENT:...|| marker.
+    try {
+      const { data: apptCfg } = await supabase
+        .from("appointment_settings").select("*").eq("business_id", businessId).maybeSingle();
+      if (apptCfg?.enabled) {
+        systemPrompt +=
+          `\n\n=== APPOINTMENTS / BOOKING ===\n` +
+          `This business takes appointments.\n` +
+          `- Bookable services: ${apptCfg.services || "general appointments"}\n` +
+          `- Working hours: ${apptCfg.working_hours}\n` +
+          `- Default slot length: ${apptCfg.slot_minutes} minutes (timezone ${apptCfg.timezone}).\n` +
+          (apptCfg.instructions ? `- Booking rules: ${apptCfg.instructions}\n` : "") +
+          `When a customer wants to book, collect their name, a contact (phone or email), the service, and a preferred date and time within working hours. ` +
+          `Once you have all of that AND the customer confirms, place the booking by appending this hidden marker on its own single line at the very end of your reply (never show it or mention it):\n` +
+          `||APPOINTMENT:{"customer_name":"...","customer_contact":"...","service":"...","starts_at":"YYYY-MM-DDTHH:MM","notes":""}||\n` +
+          `Use ISO 8601 for starts_at. If the requested time is outside working hours, offer the nearest valid slot instead of booking.`;
+      }
+    } catch (_e) { /* booking is optional, never block the reply */ }
     const userPrompt = buildUserPrompt(message, intent, matchedProducts, knowledgeEntries, history as ChatMessage[], business);
     
     // Call AI (with fallback)
@@ -1048,6 +1093,39 @@ Deno.serve(async (req: Request) => {
           escalated = false;
         } else {
           console.log(`🚨 Session ${sessionId} escalated: ${reason}`);
+
+          // An escalation is the assistant saying it could not do the job, so
+          // it is the clearest mistake signal the product has. Recorded as
+          // evidence for the distillation pass, never as an instruction:
+          // customer_text is a stranger's typing, so it is sanitised and stored
+          // as data. Only human_text, written by signed-in staff, is trusted.
+          // dedup_key is deterministic per session and turn so re-harvesting
+          // the same window adds no new evidence.
+          try {
+            // The gap goes first: it is the thing the owner acts on, and it
+            // must not be lost if the signal turns out to be a duplicate.
+            // Counted by fingerprint so the owner sees "asked 14 times" rather
+            // than fourteen separate rows.
+            await supabase.rpc("ai_upsert_knowledge_gap", {
+              p_business_id: businessId,
+              p_fingerprint: await fingerprint(message),
+              p_question: sanitiseUntrusted(message, 500),
+            });
+            // upsert, not insert: dedup_key is UNIQUE per business, so a repeat
+            // of the same escalation is expected and must not raise.
+            await supabase.from("ai_learning_signals").upsert({
+              business_id: businessId,
+              session_id: sessionId,
+              kind: "escalation",
+              polarity: "negative",
+              customer_text: sanitiseUntrusted(message),
+              ai_text: sanitiseUntrusted(response),
+              dedup_key: `escalation:${sessionId}:${reason.slice(0, 60)}`,
+            }, { onConflict: "business_id,dedup_key", ignoreDuplicates: true });
+          } catch (e) {
+            console.warn("⚠️ learning signal not recorded:", e instanceof Error ? e.message : e);
+          }
+
           // Owner notification — best-effort, never blocks the customer reply.
           try {
             const { data: sessionInfo } = await supabase
@@ -1075,6 +1153,73 @@ Deno.serve(async (req: Request) => {
       }
     }
 
+    // === KNOWLEDGE GAPS (the quiet failures) ===
+    // An escalation is a loud "I cannot help". Far more common is the AI saying
+    // some version of "I don't have specific information about that" and the
+    // conversation simply ending. Nobody is notified and nothing is logged, so
+    // the same unanswerable question gets asked for months without the owner
+    // ever finding out. Recorded here so it becomes a number they can act on.
+    if (!escalated && isHedge(response)) {
+      try {
+        await supabase.rpc("ai_upsert_knowledge_gap", {
+          p_business_id: businessId,
+          p_fingerprint: await fingerprint(message),
+          p_question: sanitiseUntrusted(message, 500),
+        });
+        await supabase.from("ai_learning_signals").upsert({
+          business_id: businessId,
+          session_id: sessionId,
+          kind: "hedge",
+          polarity: "negative",
+          customer_text: sanitiseUntrusted(message),
+          ai_text: sanitiseUntrusted(response),
+          // One per customer question, so a customer who rephrases the same
+          // thing three times does not count as three separate failures.
+          dedup_key: `hedge:${sessionId}:${await fingerprint(message)}`,
+        }, { onConflict: "business_id,dedup_key", ignoreDuplicates: true });
+      } catch (e) {
+        console.warn("⚠️ knowledge gap not recorded:", e instanceof Error ? e.message : e);
+      }
+    }
+
+    // === APPOINTMENT BOOKING ===
+    // The AI appends ||APPOINTMENT:{...}|| once a customer confirms a booking.
+    // Strip it, persist the appointment (status "requested"), notify the owner.
+    const apptMatch = response.match(/\|\|APPOINTMENT:(.*?)\|\|/s);
+    if (apptMatch) {
+      response = response.replace(apptMatch[0], "").trim();
+      try {
+        const a = JSON.parse(apptMatch[1]);
+        const startsAt = a?.starts_at ? new Date(a.starts_at) : null;
+        await supabase.from("appointments").insert({
+          business_id: businessId,
+          session_id: sessionId,
+          customer_name: (a?.customer_name ?? "").toString().slice(0, 200) || null,
+          customer_contact: (a?.customer_contact ?? "").toString().slice(0, 200) || null,
+          service: (a?.service ?? "").toString().slice(0, 200) || null,
+          starts_at: startsAt && !isNaN(startsAt.getTime()) ? startsAt.toISOString() : null,
+          notes: (a?.notes ?? "").toString().slice(0, 1000) || null,
+          status: "requested",
+        });
+        console.log(`📅 Appointment requested for session ${sessionId}`);
+        try {
+          const { email: ownerEmail, businessName } = await getOwnerContact(supabase, businessId);
+          if (ownerEmail) {
+            await sendOwnerEmail(supabase, {
+              to: ownerEmail,
+              subject: `New appointment request for ${businessName || business.name}`,
+              html: `<p>A customer requested an appointment.</p><ul>` +
+                `<li>Name: ${a?.customer_name ?? "not given"}</li>` +
+                `<li>Contact: ${a?.customer_contact ?? "not given"}</li>` +
+                `<li>Service: ${a?.service ?? "not given"}</li>` +
+                `<li>Time: ${a?.starts_at ?? "not given"}</li></ul>` +
+                `<p>Open your dashboard to confirm it.</p>`,
+            });
+          }
+        } catch (mailErr) { console.error("⚠️ Appointment email failed:", mailErr); }
+      } catch (e) { console.error("⚠️ Appointment parse failed:", e); }
+    }
+
     console.log("✅ Response ready");
     console.log("====================================\n");
 
@@ -1088,7 +1233,10 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         response: "Sorry, I encountered a technical issue. Please try again or contact support.",
-        escalated: false
+        escalated: false,
+        // Machine-readable detail so server-side callers (platform-webhook) can
+        // surface the real failure; the web widget ignores this field.
+        error: err instanceof Error ? err.message : String(err)
       }),
       { headers: { ...cors, "Content-Type": "application/json" } }
     );

@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2, Brain, ShieldCheck, BookOpen, ShoppingBag, Save, Sparkles } from "lucide-react";
 import { getBusinessType, buildAiInstructions, type SectionId } from "@/lib/businessTypes";
+import SelfImprovement from "@/components/learning/SelfImprovement";
 import { type Database } from "@/integrations/supabase/types";
 
 type Business = Database["public"]["Tables"]["businesses"]["Row"];
@@ -32,7 +33,7 @@ const AiTraining = ({ business, onSaved, onNavigate, productsLabel }: AiTraining
   const [answers, setAnswers] = useState<Record<string, string>>(initialConfig);
   const [saving, setSaving] = useState(false);
 
-  // How much the owner has taught the AI so far — encourages completeness.
+  // How much the owner has taught the AI so far, encourages completeness.
   const totalFields = type.fields.length + 2; // + description + policies
   const filledFields =
     (description.trim() ? 1 : 0) +
@@ -161,7 +162,7 @@ const AiTraining = ({ business, onSaved, onNavigate, productsLabel }: AiTraining
             Assistant behaviour
           </CardTitle>
           <CardDescription>
-            Pre-tuned for a {type.label.toLowerCase()}. Adjust the tone or rules — the "never make things up" rule stays
+            Pre-tuned for a {type.label.toLowerCase()}. Adjust the tone or rules, the "never make things up" rule stays
             enforced server-side regardless.
           </CardDescription>
         </CardHeader>
@@ -213,6 +214,9 @@ const AiTraining = ({ business, onSaved, onNavigate, productsLabel }: AiTraining
           </button>
         </CardContent>
       </Card>
+
+      {/* What the assistant worked out on its own, pending the owner's approval. */}
+      <SelfImprovement businessId={business.id} />
 
       {/* Sticky save */}
       <div className="sticky bottom-4 flex justify-end">

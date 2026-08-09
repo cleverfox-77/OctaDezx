@@ -4,6 +4,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Sheet,
@@ -81,6 +82,8 @@ interface PlatformIntegration {
   last_message_at: string | null;
   message_count: number;
   error_message: string | null;
+  comment_autoreply_enabled?: boolean;
+  comment_reply_mode?: string;
   created_at: string;
   updated_at: string;
 }
@@ -220,7 +223,7 @@ const PLATFORMS: PlatformConfig[] = [
       { title: "Get your credentials",  description: "In WhatsApp → API Setup, copy your Phone Number ID and generate a permanent access token." },
       { title: "Paste & save",          description: "Paste your credentials below and click Save." },
       { title: "Configure the webhook", description: "In Meta Developer Console → WhatsApp → Configuration → Webhooks, paste the Webhook URL and Verify Token. Subscribe to 'messages'." },
-      { title: "Test it",               description: "Send a WhatsApp message to your business number — OctaDezx AI will reply automatically!" },
+      { title: "Test it",               description: "Send a WhatsApp message to your business number, OctaDezx AI will reply automatically!" },
     ],
   },
   {
@@ -244,7 +247,7 @@ const PLATFORMS: PlatformConfig[] = [
       { title: "Connect your Page",  description: "In Messenger → Settings, generate a Page Access Token for your Facebook Page." },
       { title: "Paste credentials",  description: "Paste your Page ID, Page Access Token and App Secret, then click Save." },
       { title: "Set up the webhook", description: "In Meta App → Messenger → Webhooks, paste the Webhook URL. Use the Verify Token shown. Subscribe to 'messages' and 'messaging_postbacks'." },
-      { title: "Go live",            description: "Customers message your Facebook Page — OctaDezx handles every conversation." },
+      { title: "Go live",            description: "Customers message your Facebook Page, OctaDezx handles every conversation." },
     ],
   },
   {
@@ -267,7 +270,7 @@ const PLATFORMS: PlatformConfig[] = [
       { title: "Enable DM access",        description: "In Meta Developer Console → Messenger → Instagram Settings, enable access to Instagram Direct Messages." },
       { title: "Paste credentials",       description: "Enter your Instagram Business Account ID and Page Access Token." },
       { title: "Configure webhook",       description: "In your Meta App → Webhooks, add the Webhook URL. Subscribe to 'instagram_messages'." },
-      { title: "Test it",                 description: "Send a DM to your Instagram Business account — OctaDezx AI replies instantly." },
+      { title: "Test it",                 description: "Send a DM to your Instagram Business account, OctaDezx AI replies instantly." },
     ],
   },
   {
@@ -282,14 +285,14 @@ const PLATFORMS: PlatformConfig[] = [
     borderColor: "border-sky-500/30",
     docsUrl: "https://core.telegram.org/bots/tutorial",
     credentialFields: [
-      { key: "bot_token",  label: "Bot Token",  placeholder: "1234567890:ABCxxxxxxxxxxxxxxxxxxxx", type: "password", hint: "Get this from @BotFather on Telegram — /newbot to create, then copy the token" },
+      { key: "bot_token",  label: "Bot Token",  placeholder: "1234567890:ABCxxxxxxxxxxxxxxxxxxxx", type: "password", hint: "Get this from @BotFather on Telegram, /newbot to create, then copy the token" },
       { key: "bot_username", label: "Bot Username", placeholder: "MyShopBot",                        hint: "The username you chose in @BotFather (without @)" },
     ],
     setupSteps: [
       { title: "Create a bot via @BotFather", description: "Open Telegram, message @BotFather, run /newbot, choose a name and username." },
       { title: "Copy the token",              description: "BotFather will give you a token like 1234567890:ABCxxxx. Copy it." },
-      { title: "Paste & save",                description: "Paste your bot token below — OctaDezx automatically registers the webhook for you. No manual URL pasting needed." },
-      { title: "Done!",                       description: "Send a message to your bot on Telegram — OctaDezx AI will respond instantly." },
+      { title: "Paste & save",                description: "Paste your bot token below, OctaDezx automatically registers the webhook for you. No manual URL pasting needed." },
+      { title: "Done!",                       description: "Send a message to your bot on Telegram, OctaDezx AI will respond instantly." },
     ],
   },
   {
@@ -472,7 +475,7 @@ const PLATFORMS: PlatformConfig[] = [
     credentialFields: [
       { key: "store_url",        label: "Store URL",        placeholder: "https://yourstore.com",  hint: "Your WordPress site URL (with https://)" },
       { key: "consumer_key",     label: "Consumer Key",     placeholder: "ck_xxxxxxxxxxxxxx",       type: "password", hint: "From WooCommerce → Settings → Advanced → REST API → Add key" },
-      { key: "consumer_secret",  label: "Consumer Secret",  placeholder: "cs_xxxxxxxxxxxxxx",       type: "password", hint: "Generated alongside the Consumer Key — copy it immediately, shown once" },
+      { key: "consumer_secret",  label: "Consumer Secret",  placeholder: "cs_xxxxxxxxxxxxxx",       type: "password", hint: "Generated alongside the Consumer Key, copy it immediately, shown once" },
     ],
     setupSteps: [
       { title: "Open WooCommerce API settings", description: "In your WordPress admin, go to WooCommerce → Settings → Advanced → REST API." },
@@ -881,11 +884,11 @@ const PLATFORMS: PlatformConfig[] = [
     ],
   },
 
-  // Couriers are appended below (after COURIER_DEFS is initialized — avoids TDZ on const).
+  // Couriers are appended below (after COURIER_DEFS is initialized, avoids TDZ on const).
 ];
 
 /* ──────────────────────────────────────────────────────────────────
-   Courier builder — compact definition → full PlatformConfig
+   Courier builder, compact definition → full PlatformConfig
 ────────────────────────────────────────────────────────────────── */
 type CourierColor = "blue" | "cyan" | "indigo" | "violet" | "fuchsia" | "pink" | "rose" | "red" | "orange" | "amber" | "yellow" | "lime" | "green" | "emerald" | "teal" | "sky" | "slate";
 
@@ -924,16 +927,16 @@ const COURIER_DEFS: CourierDef[] = [
   // ── Global Aggregators (cover hundreds of carriers) ──
   { id: "easypost",  name: "EasyPost",  tagline: "100+ couriers worldwide via one API",      color: "blue",   iconType: "globe", docsUrl: "https://www.easypost.com/docs/api",
     fields: [["api_key", "Production API Key", true, "EZTK...", "EasyPost dashboard → API Keys → Production Key"]],
-    setupNotes: "Recommended for US/EU shipping — covers USPS, UPS, FedEx, DHL, Canada Post and 100+ more."
+    setupNotes: "Recommended for US/EU shipping, covers USPS, UPS, FedEx, DHL, Canada Post and 100+ more."
   },
   { id: "shippo",    name: "Shippo",    tagline: "US-focused shipping aggregator",            color: "violet", iconType: "globe", docsUrl: "https://goshippo.com/docs/",
     fields: [["api_token", "API Token", true, "shippo_live_...", "Shippo → Settings → API"]]
   },
-  { id: "aftership", name: "AfterShip", tagline: "Universal tracker — 1000+ carriers",         color: "amber",  iconType: "globe", docsUrl: "https://www.aftership.com/docs/api/4",
+  { id: "aftership", name: "AfterShip", tagline: "Universal tracker, 1000+ carriers",         color: "amber",  iconType: "globe", docsUrl: "https://www.aftership.com/docs/api/4",
     fields: [["api_key", "API Key", true, "asat_...", "AfterShip → Settings → API"]],
     setupNotes: "Tracker only (doesn't print labels). Provides auto-tracking for any tracking number, worldwide."
   },
-  { id: "shiprocket", name: "ShipRocket", tagline: "India aggregator — 17+ couriers",          color: "rose",   iconType: "globe", docsUrl: "https://apidocs.shiprocket.in/",
+  { id: "shiprocket", name: "ShipRocket", tagline: "India aggregator, 17+ couriers",          color: "rose",   iconType: "globe", docsUrl: "https://apidocs.shiprocket.in/",
     fields: [["email", "Account Email"], ["password", "Password", true]]
   },
 
@@ -1180,7 +1183,7 @@ function buildCouriers(): PlatformConfig[] {
 }
 
 // Append couriers to PLATFORMS now that COURIER_DEFS/COURIER_COLOR_CLASSES are initialized.
-// (Mutating a const array is fine — only the binding is const, not the contents.)
+// (Mutating a const array is fine, only the binding is const, not the contents.)
 PLATFORMS.push(...buildCouriers());
 
 /* ──────────────────────────────────────────────────────────────────
@@ -1204,8 +1207,11 @@ const SUPABASE_FUNCTIONS_URL = (() => {
   return url.replace(/\/$/, "");
 })();
 
-function webhookUrl(platform: string, businessId: string) {
-  return `${SUPABASE_FUNCTIONS_URL}/functions/v1/platform-webhook?platform=${platform}&business_id=${businessId}`;
+function webhookUrl(platform: string, businessId: string, verifyToken?: string) {
+  const base = `${SUPABASE_FUNCTIONS_URL}/functions/v1/platform-webhook?platform=${platform}&business_id=${businessId}`;
+  // The token authenticates platforms that send no HMAC signature (and acts as
+  // a fallback when no webhook secret is configured), see platform-webhook.
+  return verifyToken ? `${base}&token=${verifyToken}` : base;
 }
 
 function relativeTime(iso: string | null) {
@@ -1286,8 +1292,19 @@ function SetupSheet({
   // Pre-generate a stable UUID so the verify token is visible BEFORE the user
   // saves credentials for the first time (chicken-and-egg fix).
   const [localVerifyToken] = useState(() => existing?.webhook_verify_token ?? crypto.randomUUID());
-  const wUrl = webhookUrl(platform.id, businessId);
   const verifyToken = existing?.webhook_verify_token ?? localVerifyToken;
+  const wUrl = webhookUrl(platform.id, businessId, verifyToken);
+
+  // Comment auto-reply (Facebook Pages / Instagram only)
+  const supportsComments = platform.id === "facebook" || platform.id === "instagram";
+  const [commentAutoreply, setCommentAutoreply] = useState<boolean>(() => existing?.comment_autoreply_enabled ?? false);
+  const [commentMode, setCommentMode] = useState<string>(() => existing?.comment_reply_mode ?? "public");
+  const [adAccountId, setAdAccountId] = useState<string>(() => existing?.credentials?.ad_account_id ?? "");
+  useEffect(() => {
+    setCommentAutoreply(existing?.comment_autoreply_enabled ?? false);
+    setCommentMode(existing?.comment_reply_mode ?? "public");
+    setAdAccountId(existing?.credentials?.ad_account_id ?? "");
+  }, [platform.id, existing]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
     const empty = platform.credentialFields.find((f) => !fields[f.key]?.trim());
@@ -1298,19 +1315,31 @@ function SetupSheet({
 
     setSaving(true);
     try {
+      // For FB/IG, fold the optional ad account id into the stored credentials
+      // so the get_ad_insights MCP tool can find it (no DB editing needed).
+      const finalCreds = supportsComments && adAccountId.trim()
+        ? { ...fields, ad_account_id: adAccountId.trim() }
+        : fields;
+
       const payload = {
         business_id: businessId,
         platform: platform.id,
-        credentials: fields,
+        credentials: finalCreds,
         status: "pending" as PlatformStatus,
         webhook_verify_token: localVerifyToken, // ensure DB matches what user already configured
+        ...(supportsComments ? { comment_autoreply_enabled: commentAutoreply, comment_reply_mode: commentMode } : {}),
       };
 
       let result: PlatformIntegration;
       if (existing) {
         const { data, error } = await supabase
           .from("platform_integrations" as any)
-          .update({ credentials: fields as any, status: "pending", error_message: null })
+          .update({
+            credentials: finalCreds as any,
+            status: "pending",
+            error_message: null,
+            ...(supportsComments ? { comment_autoreply_enabled: commentAutoreply, comment_reply_mode: commentMode } : {}),
+          })
           .eq("id", existing.id)
           .select()
           .single();
@@ -1350,7 +1379,7 @@ function SetupSheet({
           ? "Telegram webhook registered automatically! Your bot is live."
           : platform.integrationType === "messaging"
           ? "Now configure the webhook URL in your platform's developer console."
-          : "Credentials saved — starting sync…",
+          : "Credentials saved, starting sync…",
       });
       onSaved(result, platform);
       if (platform.id === "telegram") onClose();
@@ -1431,7 +1460,7 @@ function SetupSheet({
             <div className="space-y-4 p-4 rounded-xl border bg-muted/40">
               <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Webhook Details</p>
               <div>
-                <Label className="text-xs mb-1.5 block">Webhook URL — paste this in your platform's developer console</Label>
+                <Label className="text-xs mb-1.5 block">Webhook URL, paste this in your platform's developer console</Label>
                 <div className="w-full overflow-x-auto rounded-md border bg-background px-3 py-2 mb-2">
                   <code className="text-xs text-primary whitespace-nowrap">
                     {wUrl}
@@ -1440,7 +1469,7 @@ function SetupSheet({
                 <CopyButton value={wUrl} label="Copy URL" />
               </div>
               <div>
-                <Label className="text-xs mb-1.5 block">Verify Token — enter this as the webhook verify token</Label>
+                <Label className="text-xs mb-1.5 block">Verify Token, enter this as the webhook verify token</Label>
                 <div className="w-full overflow-x-auto rounded-md border bg-background px-3 py-2 mb-2">
                   <code className="text-xs font-mono whitespace-nowrap">
                     {verifyToken}
@@ -1448,6 +1477,69 @@ function SetupSheet({
                 </div>
                 <CopyButton value={verifyToken} label="Copy Token" />
               </div>
+            </div>
+          )}
+
+          {/* ── Comment auto-reply (Facebook / Instagram) ── */}
+          {supportsComments && (
+            <div className="space-y-4 p-4 rounded-xl border bg-muted/40">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <p className="text-sm font-semibold">Auto-reply to comments</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed mt-1">
+                    Let your AI answer new comments on your {platform.name} posts, using the same
+                    knowledge it uses for chats. It never replies to your own comments.
+                  </p>
+                </div>
+                <Switch checked={commentAutoreply} onCheckedChange={setCommentAutoreply} />
+              </div>
+              {commentAutoreply && (
+                <div className="space-y-1.5">
+                  <Label className="text-xs">How should it reply?</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[
+                      { v: "public", label: "Public reply" },
+                      { v: "private", label: "Private DM" },
+                      { v: "both", label: "Both" },
+                    ].map((o) => (
+                      <button
+                        key={o.v}
+                        type="button"
+                        onClick={() => setCommentMode(o.v)}
+                        className={cn(
+                          "rounded-lg border px-3 py-2 text-xs font-medium transition-colors",
+                          commentMode === o.v ? "border-primary bg-primary/10 text-primary" : "hover:bg-muted",
+                        )}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground pt-1">
+                    Requires the <code className="text-[11px]">pages_manage_engagement</code>
+                    {platform.id === "instagram" ? " / instagram_manage_comments" : ""} permission and
+                    the <code className="text-[11px]">feed</code>/<code className="text-[11px]">comments</code> webhook
+                    field subscribed in your Meta app.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Ad account for growth tools (Facebook / Instagram, optional) ── */}
+          {supportsComments && (
+            <div className="space-y-2 p-4 rounded-xl border bg-muted/40">
+              <Label className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ad account (optional)</Label>
+              <Input
+                value={adAccountId}
+                onChange={(e) => setAdAccountId(e.target.value)}
+                placeholder="act_1234567890"
+                className="font-mono text-sm"
+              />
+              <p className="text-xs text-muted-foreground">
+                Only needed for ad performance in the Claude growth tools. Find it in Meta Ads Manager, top left account
+                dropdown (it looks like <code className="text-[11px]">act_1234567890</code>). Page insights and posting work without it.
+              </p>
             </div>
           )}
 
@@ -1649,7 +1741,7 @@ export default function PlatformIntegrations({ businessId }: Props) {
             <Plug className="h-5 w-5 text-primary" /> Platform Integrations
           </h2>
           <p className="text-sm text-muted-foreground mt-0.5">
-            Connect messaging apps, e-commerce stores, CRM tools and payment providers — all in one place.
+            Connect messaging apps, e-commerce stores, CRM tools and payment providers, all in one place.
           </p>
         </div>
         {!loading && (
@@ -1669,7 +1761,7 @@ export default function PlatformIntegrations({ businessId }: Props) {
         <div className="text-sm space-y-1">
           <p className="font-medium">How it works</p>
           <p className="text-muted-foreground leading-relaxed">
-            Connect a <strong>messaging platform</strong> and OctaDezx AI will reply to customers directly inside WhatsApp, Telegram, Instagram, and more — no external link needed.
+            Connect a <strong>messaging platform</strong> and OctaDezx AI will reply to customers directly inside WhatsApp, Telegram, Instagram, and more, no external link needed.
             Connect an <strong>e-commerce store</strong> to give your AI real-time knowledge of your products, orders, and inventory so it can answer any customer question accurately.
           </p>
         </div>
@@ -1740,7 +1832,7 @@ export default function PlatformIntegrations({ businessId }: Props) {
                     <span className={cn("flex items-center gap-1.5 text-sm font-semibold", meta.color)}>
                       {meta.icon} {cat}
                     </span>
-                    <span className="text-xs text-muted-foreground">— {meta.description}</span>
+                    <span className="text-xs text-muted-foreground">{meta.description}</span>
                     <div className="flex-1 h-px bg-border ml-2" />
                   </div>
                 )}
@@ -1835,7 +1927,7 @@ export default function PlatformIntegrations({ businessId }: Props) {
                             }
                           </Button>
 
-                          {/* Sync Now button — only for e-commerce/CRM/payments (couriers + messaging don't sync data) */}
+                          {/* Sync Now button, only for e-commerce/CRM/payments (couriers + messaging don't sync data) */}
                           {isConnected && (pc.integrationType === "ecommerce" || pc.integrationType === "crm" || pc.integrationType === "payment") && (
                             <Button
                               size="sm"

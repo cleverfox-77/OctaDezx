@@ -152,7 +152,7 @@ export default function Shipments({ businessId }: Props) {
         title: "Shipment created",
         description: result.tracking_number
           ? `Tracking: ${result.tracking_number}`
-          : "Shipment recorded — fulfil manually in courier panel.",
+          : "Shipment recorded, fulfil manually in courier panel.",
       });
       setCreateOpen(false);
       await load();
@@ -314,7 +314,7 @@ export default function Shipments({ businessId }: Props) {
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm">{o.customer_name ?? "Customer"}</div>
-                    <div className="text-xs text-muted-foreground truncate">{o.customer_email ?? "—"}</div>
+                    <div className="text-xs text-muted-foreground truncate">{o.customer_email ?? "Not provided"}</div>
                     <div className="text-xs text-muted-foreground mt-1">
                       Total: {o.total_amount ?? 0} · {new Date(o.created_at).toLocaleDateString()}
                     </div>

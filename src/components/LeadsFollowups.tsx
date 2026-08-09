@@ -21,7 +21,7 @@ type Business = Database["public"]["Tables"]["businesses"]["Row"];
    The owner's follow-up rules are stored INSIDE business.ai_instructions
    between sentinel markers. ai_instructions is already part of every AI
    prompt server-side, so the assistant genuinely applies these rules in
-   live conversations — no backend changes required. */
+   live conversations, no backend changes required. */
 const PB_START = "\n\n### FOLLOW-UP & LEAD PLAYBOOK (owner-defined)\n";
 const PB_END = "\n### END FOLLOW-UP PLAYBOOK";
 
@@ -134,7 +134,7 @@ const LeadsFollowups = ({
     setComposer(lead);
     const first = lead.customer_name?.split(" ")[0];
     setMessage(
-      `Hi${first ? ` ${first}` : ""}! Just following up from ${business.name} — ` +
+      `Hi${first ? ` ${first}` : ""}! Just following up from ${business.name}, ` +
       `is there anything else I can help you with?`
     );
   };
@@ -185,7 +185,7 @@ const LeadsFollowups = ({
             Follow-up playbook
           </CardTitle>
           <CardDescription>
-            Tell the AI how to follow up during conversations — when to nudge an undecided
+            Tell the AI how to follow up during conversations, when to nudge an undecided
             customer, what to offer, and how persistent to be. It applies these rules in
             every live chat, in the customer's language.
           </CardDescription>
@@ -207,7 +207,7 @@ const LeadsFollowups = ({
             />
             <p className="text-xs text-muted-foreground flex items-center gap-1.5">
               <Sparkles className="h-3 w-3" />
-              Saved rules take effect on the very next customer message — no retraining needed.
+              Saved rules take effect on the very next customer message, no retraining needed.
             </p>
           </div>
           <Button onClick={savePlaybook} disabled={savingPlaybook} className="press">
@@ -241,7 +241,7 @@ const LeadsFollowups = ({
         <CardHeader>
           <CardTitle className="text-base">Captured leads</CardTitle>
           <CardDescription>
-            Every customer who shared their name or email in a conversation. Send a follow-up —
+            Every customer who shared their name or email in a conversation. Send a follow-up and
             it lands directly in their existing chat thread.
           </CardDescription>
         </CardHeader>
@@ -302,7 +302,7 @@ const LeadsFollowups = ({
               Follow up with {composer?.customer_name || "customer"}
             </DialogTitle>
             <DialogDescription>
-              Sent as your team into their existing conversation — they'll see it when they
+              Sent as your team into their existing conversation, they'll see it when they
               reopen the chat.
             </DialogDescription>
           </DialogHeader>

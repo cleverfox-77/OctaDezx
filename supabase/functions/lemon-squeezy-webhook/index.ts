@@ -5,18 +5,49 @@ const crypto = globalThis.crypto;
 
 // ============================================================================
 // PLAN MAPPING
-// TODO: Replace these with actual numeric variant IDs from Lemon Squeezy
+// Variant IDs come from Lemon Squeezy:
 // Dashboard → Products → click product → variant ID in URL/settings
+// Yearly variants map to the SAME plan key as their monthly counterpart.
 // ============================================================================
+// PRICES DID NOT MOVE IN THE AUGUST 2026 REPRICING, THE NAMES DID. Every
+// variant below still charges exactly what it charged before; each one now
+// resolves to the plan key one rung down the ladder, so a customer paying $99
+// lands on 'pro' where they used to land on 'advanced'. Keep this file and
+// src/lib/plans.ts in step: the variant ids are duplicated there for the
+// checkout links, and a mismatch means somebody pays for one plan and receives
+// another. Migration 20260806040000_plan_repricing.sql moved existing rows.
 const PLAN_MAP: Record<string, string> = {
-  '1179644': 'starter',    // Starter $9/mo
-  '1130312': 'pro',        // Pro $29/mo
-  '1530207': 'enterprise', // Enterprise $99/mo
+  // ── Monthly ──
+  '1130312': 'starter',    // $29/mo
+  '1926998': 'pro',        // $99/mo
+  '1926975': 'advanced',   // $199/mo
+
+  // ── Yearly (2 months free) ──
+  '1927010': 'starter',    // $290/yr
+  '1530207': 'pro',        // $990/yr
+  '1926951': 'advanced',   // $1,990/yr
+
+  // ── Withdrawn ──
+  // The $9 tier. Archive these products in Lemon Squeezy so nobody can reach
+  // the checkout; until that is done, anyone who does gets the grandfathered
+  // key rather than a $29 plan for $9.
+  '1926986': 'legacy_starter', // $9/mo
+  '1179644': 'legacy_starter', // $90/yr
+
+  // ── One-time ──
   '1530191': 'appsumo_ltd', // AppSumo LTD $230 one-time
 };
 
 function getPlanFromVariant(variantId: string | number): string {
-  return PLAN_MAP[variantId.toString()] || 'starter';
+  const plan = PLAN_MAP[variantId.toString()];
+  if (!plan) {
+    // Loud failure beats a silent wrong plan: log so it shows in function logs.
+    // Falling back to the cheapest paid tier is the deliberate direction to be
+    // wrong in. Someone who bought Advanced and receives Starter complains and
+    // we fix it; the reverse loses money quietly and nobody ever reports it.
+    console.error(`⚠️ Unknown Lemon Squeezy variant ${variantId} — defaulting to 'starter'. Add it to PLAN_MAP.`);
+  }
+  return plan || 'starter';
 }
 
 // ============================================================================

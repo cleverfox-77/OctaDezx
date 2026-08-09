@@ -3,7 +3,32 @@ import { useAuth } from './useAuth';
 import { supabase } from '@/integrations/supabase/client';
 
 export type SubscriptionStatus = 'trial' | 'active' | 'past_due' | 'expired' | 'cancelled' | null;
-export type PlanType = 'free' | 'trial' | 'starter' | 'pro' | 'enterprise' | 'appsumo_ltd';
+
+/**
+ * Plan keys, and only plan keys. Everything about what a plan CONTAINS now
+ * lives in src/lib/plans.ts, because it was previously copied into nine files
+ * and they drifted. The re-exports below keep existing imports working.
+ *
+ * 'legacy_starter' is the withdrawn $9 tier. Accounts already paying for it
+ * keep it; nobody can buy it.
+ */
+import { seatsFor, voiceMinutesFor, type PlanKey } from '@/lib/plans';
+
+export type PlanType = PlanKey;
+export { VOICE_PLANS, voiceMinutesFor, messagesFor, seatsFor, PLAN_LABELS } from '@/lib/plans';
+
+/** Seats included with a plan, falling back to a single seat for anything unknown. */
+export const teamSeatsFor = seatsFor;
+
+/**
+ * Monthly voice minutes per plan, in the shape the dashboard already reads.
+ * Enterprise is metered, so it has no included figure and returns undefined.
+ */
+export const VOICE_MINUTES: Partial<Record<PlanKey, number>> = {
+  starter: voiceMinutesFor('starter') ?? 0,
+  pro: voiceMinutesFor('pro') ?? 0,
+  advanced: voiceMinutesFor('advanced') ?? 0,
+};
 
 export const useSubscription = () => {
     const { user } = useAuth();

@@ -211,7 +211,7 @@ export const ProductTour = () => {
                 {[
                   ["Brand voice", "Friendly, concise, always signs off with the customer's name."],
                   ["Returns policy", "30-day returns, free exchange, refund to original payment method."],
-                  ["Shipping", "Free above $30. 3–5 business days domestic, 7–10 international."],
+                  ["Shipping", "Free above $30. 3 to 5 business days domestic, 7 to 10 international."],
                 ].map(([title, body], i) => (
                   <div key={title} className="mock-row rounded-xl border px-4 py-3 flex items-start gap-3"
                     style={{ borderColor: "#eef0f3", animationDelay: `${i * 90}ms` }}>

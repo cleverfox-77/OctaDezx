@@ -12,17 +12,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { PLAN_LABELS, priceLabel } from "@/lib/plans";
 
 interface CancelSubscriptionDialogProps {
   planType: string;
   children: React.ReactNode;
 }
 
-const PLAN_LABELS: Record<string, string> = {
-  starter: "Starter ($9/mo)",
-  pro: "Pro ($29/mo)",
-  enterprise: "Enterprise ($99/mo)",
-  appsumo_ltd: "Lifetime Deal",
+// Name and price both come from src/lib/plans.ts. This dialog used to keep its
+// own copy and went on quoting $9 for a plan that had become $29.
+const planLabel = (key: string) => {
+  if (key === "appsumo_ltd") return "Lifetime Deal";
+  const price = priceLabel(key);
+  const name = PLAN_LABELS[key] ?? key;
+  return price ? `${name} (${price})` : name;
 };
 
 export const CancelSubscriptionDialog = ({ planType, children }: CancelSubscriptionDialogProps) => {
@@ -62,7 +65,7 @@ export const CancelSubscriptionDialog = ({ planType, children }: CancelSubscript
       });
 
       setOpen(false);
-      // navigate(0) is React Router's safe in-place reload — no setTimeout race
+      // navigate(0) is React Router's safe in-place reload, no setTimeout race
       navigate(0);
     } catch (err) {
       console.error("Cancel error:", err);
@@ -86,7 +89,7 @@ export const CancelSubscriptionDialog = ({ planType, children }: CancelSubscript
             Cancel Subscription
           </DialogTitle>
           <DialogDescription>
-            Are you sure you want to cancel your {PLAN_LABELS[planType] || planType} plan?
+            Are you sure you want to cancel your {planLabel(planType)} plan?
           </DialogDescription>
         </DialogHeader>
 

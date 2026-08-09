@@ -16,13 +16,24 @@ import ParticleField from "@/components/landing/ParticleField";
 import Magnetic from "@/components/landing/Magnetic";
 import ProductTour from "@/components/landing/ProductTour";
 import AmbientVideo from "@/components/landing/AmbientVideo";
+import AgenticActions from "@/components/landing/AgenticActions";
+import ImageRecognition from "@/components/landing/ImageRecognition";
+import VoiceSection from "@/components/landing/VoiceSection";
+import BusinessBreakdown from "@/components/landing/BusinessBreakdown";
 import { useCountUp } from "@/hooks/useCountUp";
+import SiteNav from "@/components/site/SiteNav";
+import SiteFooter from "@/components/site/SiteFooter";
+import PricingSection from "@/components/site/PricingSection";
+import { INTEGRATION_COUNT } from "@/components/site/integrationsData";
+import CtaSection from "@/components/site/CtaSection";
+import LaunchListWidget from "@/components/site/LaunchListWidget";
 import "../styles/landing.css";
 
 /* ── Material Symbol ── */
 const MI = ({ name, className = "", style }: { name: string; className?: string; style?: React.CSSProperties }) => (
   <span className={`material-symbols-outlined ${className}`} style={style}>{name}</span>
 );
+
 
 /* ── Social icons ── */
 const FacebookSVG = ({ className = "h-4 w-4" }: { className?: string }) => (
@@ -52,7 +63,7 @@ const CHAT_STEPS: ChatStep[] = [
   { sender: "customer", text: "Yes please, Size M.", action: "processing" },
   { sender: "ai",       text: "Perfect! Share your name, delivery address and phone to confirm. 📦" },
   { sender: "customer", text: "John Doe, 42 Maple Street, NYC. 646XXXXXXXX" },
-  { sender: "ai",       text: "✅ Confirmed! Size M ships in 3–5 days. Order #OD-20482. Thanks, John! 🎉", action: "confirmed" },
+  { sender: "ai",       text: "✅ Confirmed! Size M ships in 3 to 5 days. Order #OD-20482. Thanks, John! 🎉", action: "confirmed" },
 ];
 
 const INTEGRATIONS = [
@@ -71,6 +82,109 @@ const NAV_LINKS = [
   { label: "Pricing",      href: "#pricing"   },
   { label: "Live Demo",    href: "#demo"      },
   { label: "Support",      href: "#contact"   },
+];
+
+// Mega-menu structure for the header (desktop dropdowns + mobile grouped menu).
+// Every item points at a real section on the page.
+type MegaItem = { label: string; desc: string; href: string; icon: string };
+type MegaEntry = { label: string; href?: string; groups?: { heading: string; items: MegaItem[] }[] };
+const MEGA_MENU: MegaEntry[] = [
+  {
+    label: "Product",
+    groups: [
+      { heading: "Platform", items: [
+        { label: "Capabilities",       desc: "Support and sales, automated",   href: "#features",     icon: "bolt" },
+        { label: "How it works",       desc: "Live in under 10 minutes",       href: "#how",          icon: "route" },
+        { label: "Inside the product", desc: "A tour of the workspace",        href: "#tour",         icon: "dashboard" },
+      ] },
+      { heading: "Built in", items: [
+        { label: "Claude MCP",         desc: "Run your business from Claude",  href: "#claude",       icon: "smart_toy" },
+        { label: "Integrations",       desc: "WhatsApp, Instagram, Shopify",   href: "#integrations", icon: "hub" },
+        { label: "Follow-ups & leads", desc: "Re-engage every lead",           href: "#followups",    icon: "person_add" },
+      ] },
+    ],
+  },
+  {
+    label: "Solutions",
+    groups: [
+      { heading: "By need", items: [
+        { label: "Customer support",   desc: "Answer every customer 24/7",     href: "#features",     icon: "support_agent" },
+        { label: "Appointments",       desc: "Book slots right in chat",       href: "#capabilities", icon: "event_available" },
+        { label: "Comment replies",    desc: "Reply on Facebook & Instagram",  href: "#capabilities", icon: "reviews" },
+      ] },
+      { heading: "By business", items: [
+        { label: "Every industry",     desc: "Retail, restaurants, agencies",  href: "#solutions",    icon: "storefront" },
+        { label: "File training",      desc: "Teach the AI from your files",   href: "#capabilities", icon: "upload_file" },
+        { label: "Growth via Claude",  desc: "Analyse ads, publish posts",     href: "#claude",       icon: "rocket_launch" },
+      ] },
+    ],
+  },
+  {
+    label: "Resources",
+    groups: [
+      { heading: "Explore", items: [
+        { label: "Live demo",          desc: "Try it yourself, no signup",     href: "#demo",         icon: "chat" },
+        { label: "Customer stories",   desc: "Leaders who grew with us",       href: "#stories",      icon: "format_quote" },
+        { label: "FAQ",                desc: "Everything you need to know",     href: "#faq",          icon: "help" },
+      ] },
+    ],
+  },
+  { label: "Pricing", href: "#pricing" },
+];
+
+/* Footer link columns, every entry resolves to a real section anchor or route */
+type FooterLink = { label: string; href?: string; to?: string };
+const FOOTER_COLS: { title: string; links: FooterLink[] }[] = [
+  {
+    title: "Product",
+    links: [
+      { label: "Features",     href: "#features" },
+      { label: "How it works", href: "#how" },
+      { label: "Integrations", href: "#integrations" },
+      { label: "Claude MCP",   href: "#claude" },
+      { label: "Live demo",    href: "#demo" },
+      { label: "Pricing",      href: "#pricing" },
+    ],
+  },
+  {
+    title: "Use cases",
+    links: [
+      { label: "Customer support", href: "#features" },
+      { label: "Sales & orders",   href: "#features" },
+      { label: "Lead follow-ups",  href: "#followups" },
+      { label: "Appointments",     href: "#capabilities" },
+      { label: "Comment replies",  href: "#capabilities" },
+      { label: "File training",    href: "#capabilities" },
+    ],
+  },
+  {
+    title: "Industries",
+    links: [
+      { label: "E-commerce",     href: "#solutions" },
+      { label: "Retail & stores", href: "#solutions" },
+      { label: "Restaurants",    href: "#solutions" },
+      { label: "Agencies",       href: "#solutions" },
+      { label: "Real estate",    href: "#solutions" },
+      { label: "All industries", href: "#solutions" },
+    ],
+  },
+  {
+    title: "Company",
+    links: [
+      { label: "Customer stories", href: "#stories" },
+      { label: "FAQ",              href: "#faq" },
+      { label: "Contact us",       href: "mailto:kevin@octadezx.com" },
+      { label: "Start free trial", to: "/auth" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { label: "Privacy Policy",   to: "/privacy" },
+      { label: "Terms of Service", to: "/privacy" },
+      { label: "Cookie Policy",    to: "/privacy" },
+    ],
+  },
 ];
 
 const clientLogos = [
@@ -111,7 +225,7 @@ const DEMO_CHAT_URL    = `/chat/${DEMO_BUSINESS_ID}`;
 
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
-/* CSS vignettes for feature cards without renders — keeps every card in the
+/* CSS vignettes for feature cards without renders, keeps every card in the
    grid on the same icon → visual → text rhythm, no extra image bytes */
 const LanguageViz = () => (
   <div className="h-full w-full flex flex-col justify-center gap-2 px-4"
@@ -151,6 +265,180 @@ const LeadScoreViz = () => (
   </div>
 );
 
+/* On-brand replies: sources feeding one polished answer */
+const TrainingViz = () => (
+  <div className="h-full w-full flex flex-col justify-center gap-2 px-4"
+    style={{ background: "#f7f8fa", border: "1px solid #eef0f3", borderRadius: "0.75rem" }}>
+    <div className="flex flex-wrap gap-1.5">
+      {["Catalogue", "Policies", "Brand voice"].map((s) => (
+        <span key={s} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-semibold text-slate-600 bg-white"
+          style={{ border: "1px solid #e8eaee" }}>
+          <span className="w-1 h-1 rounded-full" style={{ background: "#000047" }} />{s}
+        </span>
+      ))}
+    </div>
+    <div className="self-center text-slate-300 text-xs leading-none">↓</div>
+    <div className="self-start max-w-[94%] px-2.5 py-1.5 rounded-xl rounded-bl-sm text-[10px] font-medium text-white leading-snug"
+      style={{ background: "#000047" }}>
+      Hi! The Oxford runs true to size, and yes, we ship to Dhaka in 2 days.
+    </div>
+  </div>
+);
+
+/* Analytics: crafted bar chart with a live resolution badge */
+const AnalyticsViz = () => (
+  <div className="h-full w-full flex items-end gap-1.5 px-4 pb-4 pt-3 relative"
+    style={{ background: "#f7f8fa", border: "1px solid #eef0f3", borderRadius: "0.75rem" }}>
+    <span className="absolute top-2.5 right-3 text-[9px] font-bold px-2 py-0.5 rounded-full z-10"
+      style={{ color: "#16a34a", background: "rgba(22,163,74,0.1)" }}>94% resolved</span>
+    {[38, 52, 44, 63, 71, 85, 100].map((h, i) => (
+      <div key={i} className="flex-1 rounded-t-[3px]" style={{ height: `${h}%`, background: "linear-gradient(180deg,#4f46e5,#000047)", opacity: 0.42 + i * 0.083 }} />
+    ))}
+  </div>
+);
+
+/* Security: crafted shield with plain-language guarantees */
+const SecurityViz = () => (
+  <div className="h-full w-full flex items-center gap-3 px-4"
+    style={{ background: "#f7f8fa", border: "1px solid #eef0f3", borderRadius: "0.75rem" }}>
+    <svg width="44" height="50" viewBox="0 0 44 50" className="flex-shrink-0">
+      <defs>
+        <linearGradient id="shieldg" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#4f46e5" /><stop offset="1" stopColor="#000047" />
+        </linearGradient>
+      </defs>
+      <path d="M22 2 40 9V25C40 37 32 45 22 48 12 45 4 37 4 25V9Z" fill="url(#shieldg)" />
+      <circle cx="22" cy="21" r="4.5" fill="none" stroke="#fff" strokeWidth="2" />
+      <rect x="20.4" y="23" width="3.2" height="8" rx="1.6" fill="#fff" />
+    </svg>
+    <div className="flex flex-col gap-1.5">
+      {["End to end encrypted", "Role based access", "GDPR ready"].map((t) => (
+        <span key={t} className="flex items-center gap-1.5 text-[10px] font-medium text-slate-600">
+          <MI name="check_circle" className="text-[13px]" style={{ color: "#16a34a" }} />{t}
+        </span>
+      ))}
+    </div>
+  </div>
+);
+
+/* ── How-it-works step mockups (brand-styled to match the real product UI) ── */
+const mockCard = "w-full rounded-2xl p-5 sm:p-6";
+const mockShadow = { background: "#ffffff", border: "1px solid #e8eaee", boxShadow: "0 2px 6px rgba(16,24,40,0.05), 0 24px 50px rgba(16,24,40,0.10)" };
+const mockPill = (label: string, tone = "#16a34a", pulse = false) => (
+  <span className="label text-[8px] px-2 py-0.5 rounded-full inline-flex items-center gap-1" style={{ color: tone, background: `${tone}1a` }}>
+    <span className={`w-1 h-1 rounded-full ${pulse ? "status-pulse" : ""}`} style={{ background: tone }} />{label}
+  </span>
+);
+
+/* Step 01, import a catalogue from a URL or CSV */
+const HowImportMock = () => (
+  <div className={mockCard} style={mockShadow}>
+    <div className="flex items-center justify-between mb-4">
+      <span className="text-sm font-bold text-slate-900">Import catalogue</span>
+      {mockPill("Done")}
+    </div>
+    <div className="label text-[8px] text-slate-400 mb-1.5">Storefront URL</div>
+    <div className="flex items-center gap-2 rounded-xl pl-3 pr-1.5 py-1.5 mb-4" style={{ background: "#f7f8fa", border: "1px solid #e8eaee" }}>
+      <MI name="link" className="text-sm flex-shrink-0" style={{ color: "#98a2b3" }} />
+      <span className="text-[11px] text-slate-500 font-medium truncate">yourstore.com/collections/all</span>
+      <span className="ml-auto flex-shrink-0 text-[10px] font-bold text-white px-3 py-1.5 rounded-lg" style={{ background: "#000047" }}>Import</span>
+    </div>
+    <div className="space-y-1.5">
+      {[["Oxford Boot", "3 variants"], ["Chelsea Boot", "5 variants"], ["Suede Loafer", "4 variants"]].map(([n, v]) => (
+        <div key={n} className="flex items-center gap-2.5 rounded-lg px-3 py-2" style={{ background: "#f7f8fa" }}>
+          <MI name="check_circle" className="text-sm flex-shrink-0" style={{ color: "#16a34a" }} />
+          <span className="text-[11px] font-semibold text-slate-700">{n}</span>
+          <span className="text-[10px] text-slate-400 ml-auto">{v}</span>
+        </div>
+      ))}
+    </div>
+    <div className="text-[11px] font-semibold text-slate-500 mt-3 text-center">142 products structured automatically</div>
+  </div>
+);
+
+/* Step 02, set the agent's personality in plain language */
+const HowTrainMock = () => (
+  <div className={mockCard} style={mockShadow}>
+    <div className="flex items-center justify-between mb-4">
+      <span className="text-sm font-bold text-slate-900">Agent personality</span>
+      {mockPill("Saved")}
+    </div>
+    <div className="label text-[8px] text-slate-400 mb-1.5">AI employee name</div>
+    <div className="flex items-center rounded-xl px-3 py-2 mb-4" style={{ background: "#f7f8fa", border: "1px solid #e8eaee" }}>
+      <span className="text-sm font-semibold text-slate-800">Ava</span>
+      <MI name="auto_awesome" className="text-sm ml-auto" style={{ color: "#7c3aed" }} />
+    </div>
+    <div className="label text-[8px] text-slate-400 mb-1.5">Tone</div>
+    <div className="flex flex-wrap gap-1.5 mb-4">
+      {([["Friendly & warm", true], ["Concise", true], ["Formal", false]] as [string, boolean][]).map(([t, on]) => (
+        <span key={t} className="px-2.5 py-1 rounded-full text-[10px] font-semibold"
+          style={on ? { color: "#000047", background: "rgba(0,0,71,0.08)", border: "1px solid rgba(0,0,71,0.2)" } : { color: "#98a2b3", background: "#f7f8fa", border: "1px solid #e8eaee" }}>{t}</span>
+      ))}
+    </div>
+    <div className="label text-[8px] text-slate-400 mb-1.5">Behaviour</div>
+    <div className="rounded-xl px-3 py-2.5 space-y-1" style={{ background: "#f7f8fa", border: "1px solid #e8eaee" }}>
+      <div className="text-[10px] mono text-slate-600"><span className="font-bold text-slate-800">Role</span> · qualify leads, one question at a time</div>
+      <div className="text-[10px] mono text-slate-500">1. Greet and identify the intent</div>
+      <div className="text-[10px] mono text-slate-500">2. If in stock, offer to place the order</div>
+      <div className="text-[10px] mono text-slate-500">3. Escalate refunds to a human</div>
+    </div>
+  </div>
+);
+
+/* Step 03, flip on the channels and go live */
+const HowLaunchMock = () => (
+  <div className={mockCard} style={mockShadow}>
+    <div className="flex items-center justify-between mb-4">
+      <span className="text-sm font-bold text-slate-900">Channels &amp; tools</span>
+      {mockPill("Live", "#16a34a", true)}
+    </div>
+    <div className="space-y-2">
+      {([["WhatsApp", "chat", "#22c55e"], ["Instagram", "photo_camera", "#ec4899"], ["Facebook", "thumb_up", "#3b82f6"], ["Web widget", "language", "#4f46e5"]] as [string, string, string][]).map(([n, ic, col]) => (
+        <div key={n} className="flex items-center gap-3 rounded-xl px-3 py-2.5" style={{ background: "#f7f8fa", border: "1px solid #e8eaee" }}>
+          <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: `${col}1a` }}>
+            <MI name={ic} className="text-sm" style={{ color: col }} />
+          </div>
+          <span className="text-xs font-semibold text-slate-700">{n}</span>
+          <span className="ml-auto w-9 h-5 rounded-full relative flex-shrink-0" style={{ background: "#000047" }}>
+            <span className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-white" />
+          </span>
+        </div>
+      ))}
+    </div>
+    <div className="flex items-center gap-2 mt-3">
+      <span className="w-1.5 h-1.5 rounded-full status-pulse" style={{ background: "#16a34a" }} />
+      <span className="text-[11px] font-semibold text-slate-500">Live across every channel in seconds</span>
+    </div>
+  </div>
+);
+
+const HOW_STEPS = [
+  {
+    n: "01",
+    eyebrow: "Step one · Import",
+    title: "Bring in your catalogue.",
+    desc: "Paste any storefront URL or drop a CSV. Titles, variants, pricing and images are structured for you automatically. No manual data entry, no spreadsheets.",
+    checks: ["Works with any storefront URL or CSV", "Variants & pricing verified server-side", "Ready in seconds, not days"],
+    mock: <HowImportMock />,
+  },
+  {
+    n: "02",
+    eyebrow: "Step two · Train",
+    title: "Tell it how to behave.",
+    desc: "Set tone, goals and escalation rules in plain language, then drop in your policies, FAQs and brand voice. No decision trees, no scripts, no engineers.",
+    checks: ["Learns policies, FAQs & tone instantly", "Set escalation rules in plain English", "Sounds like you, not a generic bot"],
+    mock: <HowTrainMock />,
+  },
+  {
+    n: "03",
+    eyebrow: "Step three · Launch",
+    title: "Plug it in. Go live.",
+    desc: "Connect WhatsApp, Instagram, Facebook, your web widget and more. One agent answers on every channel the same minute you switch it on.",
+    checks: ["One agent on every channel", "Connects to your existing tools", "Live in minutes, no migration required"],
+    mock: <HowLaunchMock />,
+  },
+];
+
 /* Stat cell with count-up on first scroll into view */
 const StatCell = ({ value, label, sub }: { value: string; label: string; sub: string }) => {
   const { ref, text } = useCountUp(value);
@@ -169,7 +457,7 @@ const StatCell = ({ value, label, sub }: { value: string; label: string; sub: st
 const Index = () => {
   const navigate = useNavigate();
 
-  /* CTA email capture — the input used to be ignored; now we persist it and
+  /* CTA email capture, the input used to be ignored; now we persist it and
      carry it into the signup flow so warm leads aren't lost. */
   const [ctaEmail, setCtaEmail] = useState("");
   const handleCtaStart = () => {
@@ -230,7 +518,7 @@ const Index = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  /* Scroll progress bar — synchronous transform write in a passive listener.
+  /* Scroll progress bar, synchronous transform write in a passive listener.
      A scaleX write never invalidates layout, so this stays cheap even at
      scroll-event frequency (and survives rAF throttling in embedded views). */
   const progressRef = useRef<HTMLDivElement>(null);
@@ -259,7 +547,7 @@ const Index = () => {
     return () => obs.disconnect();
   }, []);
 
-  /* GSAP scroll parallax — loaded lazily so it never delays first paint.
+  /* GSAP scroll parallax, loaded lazily so it never delays first paint.
      Targets wrapper elements only (never elements that own CSS keyframe
      transforms, which would fight over the same property). */
   useEffect(() => {
@@ -283,7 +571,7 @@ const Index = () => {
     return () => { cancelled = true; revert?.(); };
   }, []);
 
-  /* Bento 3D tilt — pointer devices only, no mobile CPU cost */
+  /* Bento 3D tilt, pointer devices only, no mobile CPU cost */
   useEffect(() => {
     if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
     const cards = Array.from(document.querySelectorAll<HTMLElement>(".bento"));
@@ -362,160 +650,21 @@ const Index = () => {
      RENDER
   ───────────────────────────────────────────────────────────── */
   return (
-    <div className="octa-landing min-h-screen" style={{ background: "#f4f5f7", color: "#0f172a" }}>
+    <div className="octa-landing min-h-screen overflow-x-clip" style={{ background: "#f4f5f7", color: "#0f172a" }}>
+      {/* title must match the <title> in index.html: crawlers read the static one
+          and users see this one, so a mismatch means they judge different pages.
+          Plain "&" here, not the entity, because scripts/lib/routes.mjs reads this
+          string as text and escapes it on the way into the prerendered HTML. */}
       <SEO
-        title="OctaDezx: AI Sales Assistant | Sell More, Work Less"
-        description="Always-on AI that answers customers, captures orders and syncs your catalogue across WhatsApp, Instagram, Facebook & Shopify. 24-hour free trial."
+        title="OctaDezx | Agentic AI Agents for Every Business"
+        description="Agentic AI that answers customers, takes orders and bookings, handles phone calls and reads the photos customers send. For shops, restaurants, clinics, trades and every other business. 24-hour free trial."
         canonical="https://octadezx.com/"
       />
 
       <Preloader />
       <div ref={progressRef} className="scroll-progress" aria-hidden="true" />
 
-      {/* ══ NAV ══ */}
-      <nav
-        className={`fixed top-0 left-0 w-full z-[100] transition-all duration-500 ${
-          navScrolled
-            ? "border-b backdrop-blur-2xl"
-            : "border-b border-transparent"
-        }`}
-        style={navScrolled
-          ? { background: "rgba(255,255,255,0.85)", borderColor: "#e8eaee", boxShadow: "0 1px 3px rgba(16,24,40,0.04)" }
-          : { background: "transparent" }
-        }
-      >
-        <div className="flex items-center justify-between px-4 sm:px-6 md:px-10 h-[68px] max-w-[1440px] mx-auto">
-
-          <Link to="/" className="flex items-center gap-2.5 group flex-shrink-0">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-lg blur-md opacity-50 group-hover:opacity-80 transition-opacity" style={{ background: "#000047" }} />
-              <LogoIcon size="md" className="relative" />
-            </div>
-            <span className="text-[15px] font-bold tracking-[0.07em] uppercase text-slate-900">OctaDezx</span>
-          </Link>
-
-          <div className="hidden md:flex items-center gap-0.5">
-            {NAV_LINKS.map((l) => (
-              <a key={l.label} href={l.href}
-                className={`nav-link px-4 py-2 rounded-xl text-sm font-medium hover:text-slate-900 hover:bg-slate-100 transition-all duration-200 ${
-                  activeNav === l.href ? "active text-slate-900" : "text-slate-600"
-                }`}>
-                {l.label}
-              </a>
-            ))}
-          </div>
-
-          <div className="flex items-center gap-2">
-            {/* Notif */}
-            <div ref={notifRef} className="relative hidden lg:block">
-              <button onClick={openNotif} aria-label="Notifications"
-                className="relative text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all p-2 rounded-xl focus:outline-none">
-                <MI name="notifications" />
-                {notifDot && (
-                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full status-pulse"
-                    style={{ background: "#000047", boxShadow: "0 0 0 2px #ffffff" }} />
-                )}
-              </button>
-              {notifOpen && (
-                <div className="absolute right-0 top-full mt-2 w-80 glass rounded-2xl shadow-xl overflow-hidden z-50 drop-in">
-                  <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: "#eef0f3" }}>
-                    <span className="text-sm font-semibold text-slate-900">Notifications</span>
-                    <span className="label text-slate-400">Mark all read</span>
-                  </div>
-                  <div className="px-5 py-6 flex flex-col items-center text-center gap-3">
-                    <div className="w-11 h-11 rounded-2xl flex items-center justify-center" style={{ background: "rgba(0,0,71,0.08)" }}>
-                      <MI name="notifications_active" className="text-xl" style={{ color: "#000047" }} />
-                    </div>
-                    <p className="text-sm font-medium text-slate-900">Stay in the loop</p>
-                    <p className="text-xs text-slate-500 leading-relaxed">Sign in to receive live order alerts, revenue updates and AI performance reports.</p>
-                    <Link to="/auth" onClick={() => setNotifOpen(false)}>
-                      <button className="btn-cta text-white text-xs font-bold px-5 py-2.5 rounded-xl w-full mt-1">
-                        Sign in to enable alerts
-                      </button>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Settings */}
-            <div ref={settingsRef} className="relative hidden lg:block">
-              <button onClick={openSettings} aria-label="Settings"
-                className="text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-all p-2 rounded-xl focus:outline-none">
-                <MI name="settings" className={settingsOpen ? "animate-spin" : ""} />
-              </button>
-              {settingsOpen && (
-                <div className="absolute right-0 top-full mt-2 w-60 glass rounded-2xl shadow-xl overflow-hidden z-50 drop-in">
-                  <div className="px-4 py-3 border-b" style={{ borderColor: "#eef0f3" }}>
-                    <span className="label text-slate-400">Quick navigation</span>
-                  </div>
-                  <div className="py-2">
-                    {NAV_LINKS.map((l) => (
-                      <a key={l.label} href={l.href} onClick={() => setSettingsOpen(false)}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
-                        <MI name={l.label === "Features" ? "bolt" : l.label === "How it Works" ? "route" : l.label === "Claude MCP" ? "smart_toy" : l.label === "Pricing" ? "payments" : l.label === "Live Demo" ? "chat" : "support_agent"}
-                          className="text-base flex-shrink-0" style={{ color: "#000047" }} />
-                        {l.label}
-                      </a>
-                    ))}
-                  </div>
-                  <div className="px-4 py-3 border-t" style={{ borderColor: "#eef0f3" }}>
-                    <Link to="/auth" onClick={() => setSettingsOpen(false)}>
-                      <button className="w-full btn-cta text-white text-xs font-bold px-4 py-2.5 rounded-xl">Sign In / Dashboard</button>
-                    </Link>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <Magnetic className="hidden sm:block">
-              <Link to="/auth" className="block">
-                <button className="btn-cta text-white px-5 py-2.5 rounded-xl text-sm font-bold tracking-tight">
-                  Start Free
-                </button>
-              </Link>
-            </Magnetic>
-
-            <button onClick={() => setMobileMenuOpen(v => !v)} aria-label="Toggle menu"
-              className="md:hidden p-2 rounded-xl text-slate-700 hover:bg-slate-100 transition-colors focus:outline-none">
-              {mobileMenuOpen ? <MI name="close" className="text-2xl" /> : <MI name="menu" className="text-2xl" />}
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* ══ MOBILE MENU ══ */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[99] md:hidden" onClick={closeMobileMenu}>
-          <div className="absolute inset-0 bg-slate-900/30 backdrop-blur-sm" />
-          <div className="absolute top-0 right-0 h-full w-72 border-l flex flex-col menu-panel"
-            style={{ background: "#ffffff", borderColor: "#e8eaee" }}
-            onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-5 h-[68px] border-b" style={{ borderColor: "#e8eaee" }}>
-              <span className="text-sm font-bold uppercase tracking-widest text-slate-900">Menu</span>
-              <button onClick={closeMobileMenu} className="p-1.5 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors">
-                <MI name="close" className="text-xl" />
-              </button>
-            </div>
-            <nav className="flex flex-col px-4 py-4 gap-1 flex-grow">
-              {NAV_LINKS.map((l) => (
-                <a key={l.label} href={l.href} onClick={closeMobileMenu}
-                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 transition-colors">
-                  <MI name={l.label === "Features" ? "bolt" : l.label === "How it Works" ? "route" : l.label === "Claude MCP" ? "smart_toy" : l.label === "Pricing" ? "payments" : l.label === "Live Demo" ? "chat" : "support_agent"}
-                    className="text-lg flex-shrink-0" style={{ color: "#000047" }} />
-                  {l.label}
-                </a>
-              ))}
-            </nav>
-            <div className="px-5 py-6 border-t" style={{ borderColor: "#e8eaee" }}>
-              <Link to="/auth" onClick={closeMobileMenu}>
-                <button className="w-full btn-cta text-white font-bold py-3 rounded-xl text-sm">Start 24hr Free Trial</button>
-              </Link>
-              <p className="text-center text-[10px] text-slate-400 mt-3">No credit card, full access</p>
-            </div>
-          </div>
-        </div>
-      )}
+      <SiteNav transparentAtTop />
 
       {/* ══ BACKGROUND ══ */}
       <div className="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
@@ -534,21 +683,22 @@ const Index = () => {
             <div className="hero-copy z-10 text-center lg:text-left">
               <span className="label inline-block mb-4 px-3 py-1.5 rounded-full text-[10px]"
                 style={{ color: "#000047", background: "rgba(0,0,71,0.08)", border: "1px solid rgba(0,0,71,0.18)" }}>
-                24/7 AI Customer Care &amp; Support Agent
+                Agentic AI Customer Care, For Every Business
               </span>
               <h1 className="text-[2.2rem] sm:text-[3.5rem] md:text-[5rem] lg:text-[5.5rem] xl:text-[6rem] font-black text-slate-900 leading-[1.05] tracking-[-0.03em] mb-5 sm:mb-8">
                 <span className="word-in block">AI Customer Care,</span>
-                <span className="word-in block grad-cyan">That Sells.</span>
+                <span className="word-in block grad-cyan">That Takes Action.</span>
               </h1>
 
               <p className="text-sm sm:text-lg font-normal max-w-[520px] mb-7 sm:mb-11 leading-relaxed mx-auto lg:mx-0"
                 style={{ color: "#667085" }}>
-                OctaDezx is your always-on AI customer service agent that answers customer
-                questions, resolves support requests and captures orders across WhatsApp,
-                Instagram, Facebook and Shopify, 24/7 while you sleep.
+                A restaurant, a clinic, an agency, a salon, a store: OctaDezx gives any business an
+                always-on AI agent that answers customers and then does the work. It books the
+                appointment, places the order, answers the phone and follows up the lead, on
+                WhatsApp, Instagram, Facebook, Telegram, your website and by phone.
               </p>
 
-              {/* CTAs — two primary actions in one row, video as a quiet link below */}
+              {/* CTAs, two primary actions in one row, video as a quiet link below */}
               <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start items-stretch sm:items-center">
                 <Magnetic className="w-full sm:w-auto">
                   <Link to="/auth" className="w-full sm:w-auto block">
@@ -594,7 +744,7 @@ const Index = () => {
               </p>
             </div>
 
-            {/* Right — chat widget */}
+            {/* Right, chat widget */}
             <div className="hero-visual relative hidden lg:flex items-center justify-center h-[580px]">
 
               {/* Floating badges */}
@@ -697,7 +847,7 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Mobile chat preview — upgraded with header + status bar */}
+          {/* Mobile chat preview, upgraded with header + status bar */}
           <div className="lg:hidden w-full max-w-sm mx-auto mt-8">
             <div className="chat-win rounded-2xl overflow-hidden">
               {/* Header */}
@@ -761,10 +911,10 @@ const Index = () => {
           <div className="stagger grid grid-cols-2 lg:grid-cols-4 gap-px"
             style={{ background: "#e8eaee", borderRadius: "20px", overflow: "hidden", border: "1px solid #e8eaee" }}>
             {[
-              { value: "24/7",  label: "Always Online",      sub: "Zero downtime, every timezone"  },
-              { value: "<10s",  label: "Product Onboarding", sub: "Paste URL, go live instantly"    },
-              { value: "50+",   label: "Integrations",       sub: "Every major sales channel"       },
-              { value: "99.9%", label: "Uptime SLA",         sub: "Enterprise reliability built in" },
+              { value: "24/7",  label: "Always Online",   sub: "Zero downtime, every timezone"    },
+              { value: "12",    label: "Business Types",  sub: "Each with its own dashboard"      },
+              { value: "50+",   label: "Integrations",    sub: "Chat, social, commerce and phone" },
+              { value: "99.9%", label: "Uptime SLA",      sub: "Enterprise reliability built in"  },
             ].map((s) => (
               <StatCell key={s.label} value={s.value} label={s.label} sub={s.sub} />
             ))}
@@ -801,8 +951,12 @@ const Index = () => {
 
         <div className="divider max-w-[1440px] mx-auto" />
 
+        <AgenticActions variant="strip" />
+
+        <div className="divider max-w-[1440px] mx-auto" />
+
         {/* ══ TESTIMONIALS ══ */}
-        <section className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
+        <section id="stories" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
           <div className="text-center mb-10 sm:mb-14 reveal">
             <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Customer stories</span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Leaders who grew with OctaDezx</h2>
@@ -901,12 +1055,12 @@ const Index = () => {
                 style={{ maskImage: "linear-gradient(to right, transparent, #000 22%)", WebkitMaskImage: "linear-gradient(to right, transparent, #000 22%)" }} />
             </div>
 
-            {/* Small cards — identical rhythm: icon, visual (image or vignette), text */}
+            {/* Small cards, identical rhythm: icon, visual (image or vignette), text */}
             {[
               { icon: "translate",   color: "#7c3aed", bg: "rgba(124,58,237,0.1)", title: "Speak any language",       desc: "Native-quality responses across 50+ languages, auto-detected per customer.", hover: "group-hover:rotate-12", viz: <LanguageViz /> },
-              { icon: "bolt",        color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Instant, on-brand replies", desc: "Trained on your catalogue, policies and voice, so it sounds like you, not a bot.", hover: "group-hover:scale-125", img: "/media/card-training.webp", imgAlt: "Documents flowing into the OctaDezx AI core" },
-              { icon: "insights",    color: "#000047", bg: "rgba(0,0,71,0.1)", title: "Revenue-grade analytics",  desc: "Conversion, AOV, resolution time and top products, live in one dashboard.", hover: "group-hover:scale-110", img: "/media/card-analytics.webp", imgAlt: "Rising conversion bar chart with a 94% resolution badge" },
-              { icon: "shield_lock", color: "#4f46e5", bg: "rgba(79,70,229,0.1)",  title: "Enterprise security",       desc: "End-to-end encryption, role-based access, GDPR-ready infrastructure.", hover: "group-hover:rotate-6", img: "/media/card-security.webp", imgAlt: "Navy octagonal shield with a glowing keyhole" },
+              { icon: "bolt",        color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Instant, on-brand replies", desc: "Trained on your catalogue, policies and voice, so it sounds like you, not a bot.", hover: "group-hover:scale-125", viz: <TrainingViz /> },
+              { icon: "insights",    color: "#000047", bg: "rgba(0,0,71,0.1)", title: "Revenue-grade analytics",  desc: "Conversion, resolution time and top products, live in one dashboard.", hover: "group-hover:scale-110", viz: <AnalyticsViz /> },
+              { icon: "shield_lock", color: "#4f46e5", bg: "rgba(79,70,229,0.1)",  title: "Enterprise security",       desc: "End to end encryption, role based access and GDPR ready infrastructure.", hover: "group-hover:rotate-6", viz: <SecurityViz /> },
               { icon: "target",      color: "#000047", bg: "rgba(0,0,71,0.1)",  title: "Leads, captured & followed up", desc: "Every contact becomes a lead. The AI follows your playbook to re-engage them, and you can reach out with one click.", hover: "group-hover:scale-110", viz: <LeadScoreViz /> },
             ].map((card, i) => (
               <div key={card.title}
@@ -916,12 +1070,7 @@ const Index = () => {
                   <MI name={card.icon} className={`text-xl transition-transform duration-300 ${card.hover}`} style={{ color: card.color }} />
                 </div>
                 <div className="h-32 flex-shrink-0 rounded-xl overflow-hidden">
-                  {"img" in card && card.img ? (
-                    <img src={card.img} alt={card.imgAlt ?? ""} loading="lazy" decoding="async"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]" />
-                  ) : (
-                    card.viz
-                  )}
+                  {card.viz}
                 </div>
                 <div className="pt-5">
                   <h3 className="text-lg font-bold text-slate-900 mb-2 tracking-tight">{card.title}</h3>
@@ -930,7 +1079,7 @@ const Index = () => {
               </div>
             ))}
 
-            {/* Wide — URL import */}
+            {/* Wide, URL import */}
             <div className="sm:col-span-2 bento glass rounded-[2rem] p-7 sm:p-10 relative overflow-hidden reveal-l" style={{ minHeight: 240 }}>
               <div className="bento-glow absolute inset-0 rounded-[2rem]" />
               <div className="relative z-10 flex flex-col h-full justify-center">
@@ -957,6 +1106,50 @@ const Index = () => {
                 style={{ background: "linear-gradient(to left,rgba(0,0,71,0.04),transparent)" }} />
             </div>
 
+          </div>
+        </section>
+
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        <ImageRecognition />
+
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        <VoiceSection />
+
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        {/* ══ MORE CAPABILITIES ══ */}
+        <section id="capabilities" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
+          <div className="text-center mb-10 sm:mb-14 reveal">
+            <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>More than a chatbot</span>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">
+              It works where your customers already are
+            </h2>
+            <p className="max-w-2xl mx-auto text-base" style={{ color: "#667085" }}>
+              Chat is only the start. OctaDezx answers your comments, books appointments, learns from your files,
+              and lets you run growth from inside Claude.
+            </p>
+          </div>
+          <div className="stagger grid grid-cols-1 md:grid-cols-2 gap-5">
+            {[
+              { icon: "reviews", tag: "Facebook & Instagram", title: "Answers comments, in public", desc: "When someone comments on your post, the AI replies right there, or privately in their DMs, using the same knowledge it uses in chat. It never talks over itself." },
+              { icon: "event_available", tag: "Appointments", title: "Books slots while you sleep", desc: "Customers pick a time in the conversation and the AI books it around the hours and services you set. Confirmed bookings land in your dashboard." },
+              { icon: "upload_file", tag: "Training", title: "Learns from your files", desc: "Upload a PDF, CSV, price list or a photo of your menu. OctaDezx reads it straight into its knowledge and answers from it within seconds." },
+              { icon: "rocket_launch", tag: "Growth via Claude", title: "Runs your marketing from Claude", desc: "Connect Claude and ask it to analyse your ads, study competitor creative, and draft or publish posts, all through the native OctaDezx MCP server." },
+            ].map((c) => (
+              <div key={c.title} className="reveal group rounded-[2rem] p-7 sm:p-8 transition-all hover:-translate-y-1 hover:shadow-lg"
+                style={{ background: "#ffffff", border: "1px solid #e8eaee" }}>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: "rgba(0,0,71,0.08)" }}>
+                    <MI name={c.icon} className="text-xl transition-transform duration-300 group-hover:scale-110" style={{ color: "#000047" }} />
+                  </div>
+                  <span className="label text-[9px]" style={{ color: "#98a2b3" }}>{c.tag}</span>
+                </div>
+                <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-2 tracking-tight">{c.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "#667085" }}>{c.desc}</p>
+              </div>
+            ))}
           </div>
         </section>
 
@@ -1027,55 +1220,61 @@ const Index = () => {
         <div className="divider max-w-[1440px] mx-auto" />
 
         {/* ══ HOW IT WORKS ══ */}
-        <section id="how" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
-          <div className="text-center mb-10 sm:mb-14 reveal">
+        <section id="how" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1180px] mx-auto">
+          <div className="text-center mb-12 sm:mb-20 reveal">
             <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Quick Start</span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Live in under 10 minutes</h2>
-            <p className="max-w-xl mx-auto text-base" style={{ color: "#667085" }}>No developers, no integration team. Three steps.</p>
-          </div>
-          <div className="stagger grid sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-5">
-            {[
-              { step: "01", time: "~3 min", title: "Import your catalogue", desc: "Paste any storefront URL or upload a CSV. Titles, variants, pricing and media structured automatically.", icon: "upload_file",
-                checks: ["Works with any storefront URL or CSV", "Variants & pricing verified server-side"] },
-              { step: "02", time: "~5 min", title: "Train your AI",         desc: "Drop in policies, FAQs and brand voice. Adapts to how you answer, not a generic chatbot.",              icon: "psychology",
-                checks: ["Learns policies, FAQs & tone instantly", "Escalates to humans with full context"] },
-              { step: "03", time: "~2 min", title: "Connect & go live",     desc: "Plug WhatsApp, Instagram, Facebook or your web widget. Orders start flowing in, 24/7.",                  icon: "rocket_launch",
-                checks: ["WhatsApp · Instagram · Facebook · Web", "Answering customers the same minute"] },
-            ].map((s) => (
-              <div key={s.step} className="step-card rounded-[2rem] p-7 sm:p-8 relative overflow-hidden flex flex-col">
-                <div className="flex items-start justify-between mb-6">
-                  <div>
-                    <span className="text-5xl font-black leading-none select-none block" style={{ color: "rgba(15,23,42,0.07)" }}>{s.step}</span>
-                    <span className="label text-[9px] mt-2 inline-block px-2 py-0.5 rounded-full"
-                      style={{ color: "#000047", background: "rgba(0,0,71,0.07)" }}>{s.time}</span>
-                  </div>
-                  <div className="p-2.5 rounded-xl" style={{ background: "rgba(0,0,71,0.08)" }}>
-                    <MI name={s.icon} className="text-xl" style={{ color: "#000047" }} />
-                  </div>
-                </div>
-                <h3 className="text-lg font-bold text-slate-900 mb-2.5 tracking-tight">{s.title}</h3>
-                <p className="text-sm leading-relaxed mb-5" style={{ color: "#667085" }}>{s.desc}</p>
-                <ul className="mt-auto space-y-2 pt-4" style={{ borderTop: "1px solid #eef0f3" }}>
-                  {s.checks.map((c) => (
-                    <li key={c} className="flex items-start gap-2 text-xs font-medium text-slate-600">
-                      <MI name="check_circle" className="text-sm flex-shrink-0 mt-[1px]" style={{ color: "#16a34a" }} />
-                      {c}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <p className="max-w-xl mx-auto text-base" style={{ color: "#667085" }}>
+              No developers, no integration team, no migration. Three steps and your AI is answering customers.
+            </p>
           </div>
 
-          {/* The three steps, in motion */}
-          <div className="reveal-s mt-6 sm:mt-8 rounded-[2rem] overflow-hidden hidden sm:block"
-            style={{ border: "1px solid #e8eaee", boxShadow: "0 2px 6px rgba(16,24,40,0.05), 0 24px 60px rgba(16,24,40,0.10)" }}>
-            <AmbientVideo
-              src="/media/loop-workflow.mp4"
-              poster="/media/loop-workflow-poster.webp"
-              label="Import your catalogue, train the AI, connect channels: animated walkthrough"
-              className="w-full block"
-            />
+          <div className="relative">
+            {/* center rail (desktop only) */}
+            <div className="hidden lg:block absolute top-4 bottom-4 left-1/2 -translate-x-1/2 w-px" aria-hidden="true"
+              style={{ background: "linear-gradient(180deg, transparent, #d7dae1 6%, #d7dae1 94%, transparent)" }} />
+
+            <div className="space-y-14 sm:space-y-16 lg:space-y-28">
+              {HOW_STEPS.map((s, i) => {
+                const flip = i % 2 === 1; // step 02 puts the mockup on the left
+                return (
+                  <div key={s.n} className="relative lg:grid lg:grid-cols-2 lg:gap-20 lg:items-center">
+                    {/* node on the rail (desktop) */}
+                    <div className="hidden lg:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 w-14 h-14 rounded-full items-center justify-center text-white font-black text-sm"
+                      style={{ background: "linear-gradient(135deg,#000047,#4f46e5)", boxShadow: "0 8px 24px rgba(0,0,71,0.35), 0 0 0 6px #f4f5f7" }}>
+                      {s.n}
+                    </div>
+
+                    {/* copy */}
+                    <div className={`${flip ? "reveal-r lg:order-2 lg:pl-14" : "reveal-l lg:order-1 lg:pr-14"}`}>
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="lg:hidden w-9 h-9 rounded-full flex items-center justify-center text-white font-black text-xs flex-shrink-0"
+                          style={{ background: "linear-gradient(135deg,#000047,#4f46e5)" }}>{s.n}</span>
+                        <span className="label text-[10px] inline-block relative pb-1.5" style={{ color: "#000047" }}>
+                          {s.eyebrow}
+                          <span className="absolute left-0 bottom-0 w-7 h-[2px] rounded-full" style={{ background: "#000047" }} />
+                        </span>
+                      </div>
+                      <h3 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 mb-3 tracking-tight">{s.title}</h3>
+                      <p className="text-sm sm:text-base leading-relaxed mb-6" style={{ color: "#667085" }}>{s.desc}</p>
+                      <ul className="space-y-2.5">
+                        {s.checks.map((c) => (
+                          <li key={c} className="flex items-start gap-2.5 text-sm font-medium text-slate-700">
+                            <MI name="check_circle" className="text-base flex-shrink-0 mt-[1px]" style={{ color: "#16a34a" }} />
+                            {c}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* mockup */}
+                    <div className={`mt-8 lg:mt-0 ${flip ? "reveal-l lg:order-1 lg:pr-14" : "reveal-r lg:order-2 lg:pl-14"}`}>
+                      {s.mock}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
@@ -1126,8 +1325,9 @@ const Index = () => {
                 {[
                   "“Any customers waiting on us?” and Claude lists escalated chats with context",
                   "“Reply to Sofia that her refund was processed” goes straight into the live conversation",
-                  "“Add this to the knowledge base so it never escalates again” and the AI learns it instantly",
-                  "Check orders, update products and review conversations, all from Claude",
+                  "“How are my ads doing, and what are competitors running?” with insights and Ad Library creative",
+                  "“Draft a post about the weekend sale and publish it to Instagram” from the same chat",
+                  "Check orders, book appointments, reply to comments and teach the knowledge base, all from Claude",
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-3 text-sm" style={{ color: "rgba(255,255,255,0.85)" }}>
                     <MI name="check_circle" className="text-base flex-shrink-0 mt-[1px]" style={{ color: "#4ade80" }} />
@@ -1230,11 +1430,16 @@ const Index = () => {
               ))}
             </div>
 
-            <button className="glass text-slate-800 px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition-all inline-flex items-center gap-2 text-sm reveal">
-              View all 50+ integrations <MI name="arrow_forward" />
-            </button>
+            <Link to="/integrations"
+              className="glass text-slate-800 px-6 py-3 rounded-xl font-semibold hover:bg-slate-50 transition-all inline-flex items-center gap-2 text-sm reveal">
+              View all {INTEGRATION_COUNT} integrations <MI name="arrow_forward" />
+            </Link>
           </div>
         </section>
+
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        <BusinessBreakdown variant="compact" />
 
         <div className="divider max-w-[1440px] mx-auto" />
 
@@ -1284,81 +1489,7 @@ const Index = () => {
         <div className="divider max-w-[1440px] mx-auto" />
 
         {/* ══ PRICING ══ */}
-        <section id="pricing" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
-          <div className="text-center mb-10 sm:mb-14 reveal">
-            <span className="label text-[10px] mb-4 block" style={{ color: "#000047" }}>Simple Pricing</span>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 mb-4 tracking-tight">Plans for every stage</h2>
-            <p className="text-slate-500 max-w-xl mx-auto text-base">Start free for 24 hours. No credit card required.</p>
-          </div>
-
-          <div className="stagger grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 items-start">
-
-            <div className="glass rounded-[2rem] p-7 sm:p-9 flex flex-col hover:-translate-y-2 transition-transform duration-300">
-              <div className="mb-7">
-                <div className="label text-slate-500 mb-2">Starter</div>
-                <div className="text-4xl font-black text-slate-900 tracking-tight">$9<span className="text-lg text-slate-400 font-medium">/mo</span></div>
-                <p className="text-sm text-slate-500 mt-2">Small businesses, boutiques, and startups.</p>
-              </div>
-              <ul className="space-y-3 mb-8 flex-grow">
-                {["300 unique customers / day","Essential automation tools","Core integrations","Email support"].map((f) => (
-                  <li key={f} className="flex items-start gap-3 text-sm text-slate-600">
-                    <MI name="check_circle" className="text-sm mt-0.5 flex-shrink-0" style={{ color: "#000047" }} />{f}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/auth">
-                <button className="w-full py-3.5 rounded-xl glass text-slate-900 font-bold hover:bg-slate-50 transition-all text-sm">Get Started</button>
-              </Link>
-            </div>
-
-            <div className="relative group md:-mt-6">
-              <div className="absolute -inset-[1px] rounded-[2rem] opacity-40 blur-sm"
-                style={{ background: "linear-gradient(135deg,#000047,#4f46e5)" }} />
-              <div className="relative pricing-pro rounded-[2rem] p-7 sm:p-9 flex flex-col overflow-hidden">
-                <div className="absolute top-0 right-6 px-3 py-1 label text-[9px] text-white rounded-b-xl"
-                  style={{ background: "linear-gradient(135deg,#000047,#4f46e5)" }}>Most Popular</div>
-                <div className="mb-7">
-                  <div className="label mb-2" style={{ color: "#000047" }}>Pro Business</div>
-                  <div className="text-4xl font-black text-slate-900 tracking-tight">$29<span className="text-lg text-slate-400 font-medium">/mo</span></div>
-                  <p className="text-sm text-slate-600 mt-2">Growing businesses and marketing agencies.</p>
-                </div>
-                <ul className="space-y-3 mb-8 flex-grow">
-                  {["1,000 unique customers / day","Whitelabel branding","Priority processing","Advanced analytics & reporting"].map((f) => (
-                    <li key={f} className="flex items-start gap-3 text-sm text-slate-700">
-                      <MI name="check_circle" className="text-sm mt-0.5 flex-shrink-0" style={{ color: "#000047" }} />{f}
-                    </li>
-                  ))}
-                </ul>
-                <Link to="/auth">
-                  <button className="w-full py-3.5 rounded-xl btn-cta text-white font-bold text-sm">Launch Pro</button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="glass rounded-[2rem] p-7 sm:p-9 flex flex-col hover:-translate-y-2 transition-transform duration-300">
-              <div className="mb-7">
-                <div className="label text-slate-500 mb-2">Enterprise</div>
-                <div className="text-4xl font-black text-slate-900 tracking-tight">$99<span className="text-lg text-slate-400 font-medium">/mo</span></div>
-                <p className="text-sm text-slate-500 mt-2">Large-scale operations and expanding platforms.</p>
-              </div>
-              <ul className="space-y-3 mb-8 flex-grow">
-                {["Unlimited daily customers","100,000 messages / month","Dedicated success manager","Priority SLA & onboarding"].map((f) => (
-                  <li key={f} className="flex items-start gap-3 text-sm text-slate-600">
-                    <MI name="check_circle" className="text-sm mt-0.5 flex-shrink-0" style={{ color: "#7c3aed" }} />{f}
-                  </li>
-                ))}
-              </ul>
-              <Link to="/auth">
-                <button className="w-full py-3.5 rounded-xl glass text-slate-900 font-bold hover:bg-slate-50 transition-all text-sm">Contact Sales</button>
-              </Link>
-            </div>
-          </div>
-
-          <p className="text-center text-sm text-slate-500 mt-9 flex items-center justify-center gap-2">
-            <MI name="check_circle" className="text-sm flex-shrink-0" style={{ color: "#16a34a" }} />
-            All plans include a 24-hour free trial, no credit card required
-          </p>
-        </section>
+        <PricingSection />
 
         {/* ══ LIVE DEMO ══ */}
         <section id="demo" className="py-12 sm:py-20 md:py-28 px-4 sm:px-6 max-w-[1440px] mx-auto">
@@ -1426,7 +1557,7 @@ const Index = () => {
                 {[
                   { sender: "ai",       text: "Hello! 👋 Welcome to Merrell, your destination for premium leather shoes. How can I help you today?" },
                   { sender: "customer", text: "Do you have leather loafers for men?" },
-                  { sender: "ai",       text: "Yes! We carry several premium leather loafers. Our best seller is the Merrell Classic Oxford in full-grain leather, available in sizes 7–13. Would you like to see the collection with prices? 👞" },
+                  { sender: "ai",       text: "Yes! We carry several premium leather loafers. Our best seller is the Merrell Classic Oxford in full-grain leather, available in sizes 7 to 13. Would you like to see the collection with prices? 👞" },
                   { sender: "customer", text: "Sure, what's the price range?" },
                   { sender: "ai",       text: "Our loafers range from $89 to $199 depending on the leather grade. Free shipping on orders over $100. Want me to show you specific styles?" },
                 ].map((m, i) => (
@@ -1500,7 +1631,7 @@ const Index = () => {
             {[
               { q: "What is OctaDezx?", a: "OctaDezx is an AI customer care platform that gives your business an always-on AI agent to answer customer questions, resolve support requests and capture orders 24/7 across WhatsApp, Instagram, Facebook, Shopify and more." },
               { q: "Can OctaDezx replace a customer care agent?", a: "It works as a 24/7 AI customer service agent that instantly answers FAQs, handles product and order questions and resolves common support requests, then escalates to your human team with full context when a conversation needs a person." },
-              { q: "Which channels does the AI customer service agent cover?", a: "WhatsApp, Instagram, Facebook, Shopify and your website widget out of the box, plus 50+ integrations, all answered from one place in your customers' own language." },
+              { q: "Which channels does the AI customer service agent cover?", a: "WhatsApp, Instagram, Facebook, Shopify and your website widget out of the box, plus inbound and outbound phone calls and 90+ integrations covering stores, CRMs, payments and couriers, all answered from one place in your customers' own language." },
               { q: "Does it take orders, not just answer questions?", a: "Yes. Beyond support, OctaDezx confirms and places orders for you. Every price and total is verified on our servers against your catalogue, so customers are always charged the correct amount." },
               { q: "How fast can I go live?", a: "Under 10 minutes. Paste a storefront URL to import your catalogue, add your policies and FAQs, connect a channel, and your AI customer care agent is live." },
               { q: "Can OctaDezx follow up with customers and leads?", a: "Yes. Every customer who shares contact details becomes a lead in your dashboard. You write a follow-up playbook in plain language and the AI applies it in every conversation. You can also send one-click follow-ups that land directly in the customer's existing chat thread." },
@@ -1518,99 +1649,27 @@ const Index = () => {
 
         <div className="divider max-w-[1440px] mx-auto" />
 
-        {/* ══ CTA ══ */}
-        <section className="py-12 sm:py-20 md:py-28 relative overflow-hidden px-4 sm:px-6">
-          <div className="max-w-[900px] mx-auto reveal-s">
-            <div className="cta-card relative rounded-[2.5rem] p-8 sm:p-14 md:p-20 text-center overflow-hidden">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-80 h-80 rounded-full opacity-20 pointer-events-none"
-                style={{ background: "radial-gradient(circle,#ffffff,transparent 65%)", filter: "blur(50px)" }} />
-              <div className="absolute bottom-0 right-0 w-48 h-48 rounded-full opacity-10 pointer-events-none"
-                style={{ background: "radial-gradient(circle,#ffffff,transparent 65%)", filter: "blur(40px)" }} />
-              <div className="relative z-10">
-                <span className="label text-[10px] mb-5 block" style={{ color: "rgba(255,255,255,0.8)" }}>Get Started Today</span>
-                <h2 className="text-3xl sm:text-4xl md:text-5xl font-black text-white mb-4 sm:mb-6 tracking-tight">Ready to automate?</h2>
-                <p className="mb-9 sm:mb-11 text-base sm:text-lg" style={{ color: "rgba(255,255,255,0.88)" }}>
-                  Put your customer care and sales on autopilot with OctaDezx. Answer every
-                  customer and capture every order, 24/7.
-                </p>
-                <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-                  <input type="email" placeholder="Enter your work email"
-                    value={ctaEmail}
-                    onChange={(e) => setCtaEmail(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleCtaStart(); }}
-                    aria-label="Work email"
-                    className="rounded-2xl px-5 py-4 w-full sm:w-80 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/40 border text-sm"
-                    style={{ background: "rgba(255,255,255,0.12)", borderColor: "rgba(255,255,255,0.25)" }} />
-                  <button onClick={handleCtaStart} className="px-9 py-4 rounded-2xl font-bold w-full sm:w-auto sm:flex-shrink-0 text-sm transition-transform hover:-translate-y-0.5"
-                    style={{ background: "#ffffff", color: "#000047" }}>Start Now →</button>
-                </div>
-                <p className="text-sm mt-6 flex items-center justify-center gap-2" style={{ color: "rgba(255,255,255,0.75)" }}>
-                  <MI name="lock" className="text-sm" /> Secure, GDPR compliant, cancel anytime
-                </p>
-              </div>
-            </div>
+        {/* Waitlist signup. Sits just before the closing call to action so the
+            page still ends on the trial, which is the stronger ask for anyone
+            ready to buy today. Move the section, not the component, to relocate it. */}
+        <section id="waitlist" className="px-6 py-20">
+          <div className="max-w-xl mx-auto text-center">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 mb-3">
+              Get the next release first
+            </h2>
+            <p className="text-sm leading-relaxed mb-8" style={{ color: "#667085" }}>
+              Join the list and we will let you know as new channels and features go live.
+            </p>
+            <LaunchListWidget keyId="pGsPeb" />
           </div>
         </section>
 
+        <div className="divider max-w-[1440px] mx-auto" />
+
+        <CtaSection />
       </main>
 
-      {/* ══ FOOTER ══ */}
-      <footer id="contact" className="w-full py-14 px-4 sm:px-6 md:px-12 border-t"
-        style={{ background: "#ebedf1", borderColor: "#e2e5ea" }}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 sm:gap-12 max-w-[1440px] mx-auto">
-          <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2.5 mb-5 group w-fit">
-              <div className="relative">
-                <div className="absolute inset-0 rounded-lg blur-md opacity-20 group-hover:opacity-40 transition-opacity bg-blue-600" />
-                <LogoIcon size="md" className="relative" />
-              </div>
-              <span className="text-base font-bold tracking-[0.07em] uppercase text-slate-900">OctaDezx</span>
-            </Link>
-            <p className="text-slate-500 label text-[10px] leading-relaxed">
-              © {new Date().getFullYear()} OctaDezx.<br className="hidden sm:block" /> Making shop life easier.
-            </p>
-            <p className="text-slate-400 label text-[9px] mt-2">Secure &amp; GDPR Compliant</p>
-            <div className="flex items-center gap-2.5 mt-5">
-              <a href="https://www.facebook.com/profile.php?id=61586165043647" target="_blank" rel="noopener noreferrer" aria-label="Facebook"
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all"
-                style={{ background: "#ffffff", border: "1px solid #e8eaee" }}><FacebookSVG /></a>
-              <a href="https://www.instagram.com/octadezx_" target="_blank" rel="noopener noreferrer" aria-label="Instagram"
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-pink-600 hover:bg-pink-50 transition-all"
-                style={{ background: "#ffffff", border: "1px solid #e8eaee" }}><InstagramSVG /></a>
-              <a href="mailto:kevin@octadezx.com" aria-label="Email"
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-red-500 hover:bg-red-50 transition-all"
-                style={{ background: "#ffffff", border: "1px solid #e8eaee" }}><MailSVG /></a>
-            </div>
-          </div>
-
-          <div>
-            <h4 className="text-slate-900 text-xs font-bold mb-5 uppercase tracking-[0.14em]">Product</h4>
-            <ul className="space-y-3.5">
-              {[{label:"Core Features",href:"#features"},{label:"Integrations",href:"#integrations"},{label:"Pricing",href:"#pricing"}].map((l) => (
-                <li key={l.label}><a href={l.href} className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">{l.label}</a></li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-slate-900 text-xs font-bold mb-5 uppercase tracking-[0.14em]">Community</h4>
-            <ul className="space-y-3.5">
-              <li><a href="mailto:kevin@octadezx.com" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">Help Center</a></li>
-              <li><a href="#faq" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">FAQ</a></li>
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="text-slate-900 text-xs font-bold mb-5 uppercase tracking-[0.14em]">Legal</h4>
-            <ul className="space-y-3.5">
-              <li><Link to="/privacy" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">Privacy Policy</Link></li>
-              {/* TODO: replace with dedicated /terms and /cookies pages once written; routed to privacy for now so links aren't dead */}
-              <li><Link to="/privacy" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="label text-[11px] text-slate-500 hover:text-slate-900 transition-colors">Cookie Policy</Link></li>
-            </ul>
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 };

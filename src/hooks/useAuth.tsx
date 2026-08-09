@@ -28,7 +28,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // onAuthStateChange fires INITIAL_SESSION on mount — no need for a
+    // onAuthStateChange fires INITIAL_SESSION on mount, no need for a
     // separate getSession() call, which would cause a double-render race.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (_event, session) => {

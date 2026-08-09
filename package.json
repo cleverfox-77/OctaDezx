@@ -6,28 +6,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
-    "build:prerender": "vite build && react-snap",
+    "build": "vite build && node scripts/prerender.mjs",
+    "build:dev": "vite build --mode development && node scripts/prerender.mjs",
+    "build:norender": "vite build",
+    "verify:seo": "node scripts/verify-seo.mjs",
+    "verify:live": "node scripts/verify-live.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "preview:production": "vite preview --port 4173 --host",
     "assets:process": "python scripts/process_assets.py",
     "assets:upload": "node scripts/upload-r2.mjs",
     "assets:upload:dry": "node scripts/upload-r2.mjs --dry-run"
-  },
-  "reactSnap": {
-    "source": "dist",
-    "include": [
-      "/",
-      "/privacy"
-    ],
-    "skipThirdPartyRequests": true,
-    "inlineCss": false,
-    "puppeteerArgs": [
-      "--no-sandbox",
-      "--disable-setuid-sandbox"
-    ]
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -72,6 +61,7 @@
     "input-otp": "^1.4.2",
     "lucide-react": "^0.462.0",
     "next-themes": "^0.3.0",
+    "nodemailer": "^6.10.1",
     "react": "^18.3.1",
     "react-day-picker": "^8.10.1",
     "react-dom": "^18.3.1",
@@ -83,6 +73,7 @@
     "sonner": "^1.7.4",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "thinking-orbs": "^0.2.0",
     "vaul": "^0.9.9",
     "zod": "^3.25.76"
   },
@@ -96,6 +87,7 @@
     "@vitejs/plugin-react": "^5.0.1",
     "@vitejs/plugin-react-swc": "^3.11.0",
     "autoprefixer": "^10.4.21",
+    "esbuild": "^0.25.9",
     "eslint": "^9.32.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.20",
